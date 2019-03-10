@@ -10,7 +10,7 @@ template_list.append( Template("../Templates/temp3.txt", debug=True) )
 template_list.append( Template("../Templates/temp4.txt", debug=True) )
 
 generator = Generator(key_templates=template_list)
-outGrid = generator.getlevel()
+outGrid = generator.getlevel(size=[2,2], surroundWalls=False)
 
 WriteStream = open("../Levels/Test.txt", "w+")
 for row in outGrid.values():

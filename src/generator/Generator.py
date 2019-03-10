@@ -1,27 +1,75 @@
+import copy
+import random
+from src.generator.Module import Module
+from src.generator.TemplateContainer import TemplateContainer
+
+
 class Generator:
-    templates = []
+    key_templates = []
     wildcards = []
 
-    def __init__(self, key_templates, wildcards = []):
-        Generator.templates = key_templates
-        Generator.wildcards = wildcards
+    def __init__(self, key_templates, wildcards=[]):
 
-    def getlevel(self, size=[2,2]):
+        # Add every template to a container
+        for template in key_templates:
+            Generator.key_templates.append(TemplateContainer(template))
+
+        # Add every template to a container
+        for wildcard in wildcards:
+            Generator.wildcards.append(TemplateContainer(wildcard))
+
+    def getlevel(self, size=[2, 2], surroundWalls=False):
         # Generate the grid
-        templategrid = [ [ None for i in range(size[0]) ] for j in range(size[1]) ]
-        # templategrid = {}
+        templategrid = [[None for i in range(size[0])] for j in range(size[1])]
         print("Empty template grid",templategrid)
-        print("Templates: ",Generator.templates)
+        print("Templates: ", Generator.key_templates)
+        print("Wildcards: ", Generator.wildcards)
 
-        templategrid[0][0] = Generator.templates[0].OriginalLevel
-        templategrid[0][1] = Generator.templates[1].OriginalLevel
-        templategrid[1][0] = Generator.templates[2].OriginalLevel
-        templategrid[1][1] = Generator.templates[3].OriginalLevel
+        # NOTE: Wave Function Collapse
+
+        # NOTE: Fill grid with Modules
+        self.reset_grid(templategrid, size)
+        # self.fake_solution(templategrid, size)
+
+        # NOTE: Iterate updating neighbours
+        finished = False
+        while not finished:
+            # # Pick one of the modules randomly and collapse it
+            # chosen_one = templategrid[random.randrange(0, size[0])][random.randrange(0, size[1])]
+            # if chosen_one.collapsed:
+            #     continue
+            # else:
+            #     # print("Selected to collapse: ", chosen_one)
+            #     chosen_one.collapse_random()
+            #     chosen_one.update_neighbours()
+
+            # Check whether to finish (all templates have collapsed)
+            # or stop and start over again (contradiction found)
+            all_collapsed = True
+            for i in range(0, size[0]):
+                for j in range(0, size[1]):
+                    if not templategrid[i][j].collapsed:
+                        all_collapsed = False
+                    if templategrid[i][j].contradiction:
+                        # Contradiction found
+                        print("Reseting grid...")
+                        self.reset_grid(templategrid, size)
+            if all_collapsed:
+                finished = True
+
+        finalgrid = [[None for i in range(size[0])] for j in range(size[1])]
+        for i in range(0, size[0]):
+            for j in range(0, size[1]):
+                try:
+                    finalgrid[i][j] = templategrid[i][j].PossibilitySpace[0].template.OriginalLevel
+                except IndexError as e:
+                    print("IndexError:", e)
+                # print("Possibility space", templategrid[i][j].PossibilitySpace)
 
         # Create final level
         lastRow = 0
         outGrid = {}
-        for templateRowCount, templateRow in enumerate(templategrid):
+        for templateRowCount, templateRow in enumerate(finalgrid):
             for templateCount, template in enumerate(templateRow):
                 for rowCount, row in enumerate(template):
                     if rowCount + lastRow in outGrid:
@@ -29,4 +77,77 @@ class Generator:
                     else:
                         outGrid[rowCount + lastRow] = row
             lastRow += len(template)
+
+        if surroundWalls:
+            self.ensureOuterWalls(outGrid)
         return outGrid
+
+    def reset_grid(self, grid, size):
+        for i in range(0, len(grid)):
+            for j in range(0, len(grid[i])):
+                grid[i][j] = Module(copy.copy(Generator.key_templates))
+
+        # Set modules' neighbours
+        for i in range(0, size[0]):
+            for j in range(0, size[1]):
+                try:
+                    # Up
+                    grid[i][j].set_neighbour(grid[i-1][j], 0)
+                except Exception:
+                    pass
+                try:
+                    # Right
+                    grid[i][j].set_neighbour(grid[i][j+1], 1)
+                except Exception:
+                    pass
+                try:
+                    # Down
+                    grid[i][j].set_neighbour(grid[i+1][j], 2)
+                except Exception:
+                    pass
+                try:
+                    # Left
+                    grid[i][j].set_neighbour(grid[i][j-1], 3)
+                except Exception:
+                    pass
+
+    def ensureOuterWalls(self, grid):
+        for i in range(0, len(grid)):
+            print("Row", i)
+            if i is 0 or i is len(grid)-1:
+                    grid[i] = "#" * (len(grid[i])-1)
+            else:
+                grid[i] = "#" + grid[i][1:len(grid[i])-2] + "#"
+
+    def fake_solution(self, grid, size):
+        count = 0
+        for i in range(0, len(grid)):
+            for j in range(0, len(grid[i])):
+                grid[i][j] = Module(copy.copy([Generator.key_templates[count]]))
+                grid[i][j].collapsed = True
+                count += 1
+        # Set modules' neighbours
+        for i in range(0, size[0]):
+            for j in range(0, size[1]):
+                try:
+                    # Up
+                    grid[i][j].set_neighbour(grid[i-1][j], 0)
+                except Exception:
+                    pass
+                try:
+                    # Right
+                    grid[i][j].set_neighbour(grid[i][j+1], 1)
+                except Exception:
+                    pass
+                try:
+                    # Down
+                    grid[i][j].set_neighbour(grid[i+1][j], 2)
+                except Exception:
+                    pass
+                try:
+                    # Left
+                    grid[i][j].set_neighbour(grid[i][j-1], 3)
+                except Exception:
+                    pass
+
+
