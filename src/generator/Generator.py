@@ -34,14 +34,16 @@ class Generator:
         # NOTE: Iterate updating neighbours
         finished = False
         while not finished:
-            # # Pick one of the modules randomly and collapse it
-            # chosen_one = templategrid[random.randrange(0, size[0])][random.randrange(0, size[1])]
-            # if chosen_one.collapsed:
-            #     continue
-            # else:
-            #     # print("Selected to collapse: ", chosen_one)
-            #     chosen_one.collapse_random()
-            #     chosen_one.update_neighbours()
+            # Pick one of the modules randomly and collapse it
+            chosenI = random.randrange(0, size[0])
+            chosenJ = random.randrange(0, size[1])
+            chosen_one = templategrid[chosenI][chosenJ]
+            if chosen_one.collapsed:
+                continue
+            else:
+                # print("Selected to collapse: ", chosen_one)
+                chosen_one.collapse_random()
+                chosen_one.update_neighbours()
 
             # Check whether to finish (all templates have collapsed)
             # or stop and start over again (contradiction found)
@@ -85,31 +87,42 @@ class Generator:
     def reset_grid(self, grid, size):
         for i in range(0, len(grid)):
             for j in range(0, len(grid[i])):
-                grid[i][j] = Module(copy.copy(Generator.key_templates))
+                grid[i][j] = Module(possibilities=copy.copy(Generator.key_templates), position=[i,j])
+
+        # Faking solution
+        grid[0][0] = Module( possibilities=[copy.copy(Generator.key_templates[0])], position=[0,0])
+        grid[0][0].collapsed = True
 
         # Set modules' neighbours
         for i in range(0, size[0]):
             for j in range(0, size[1]):
                 try:
-                    # Up
-                    grid[i][j].set_neighbour(grid[i-1][j], 0)
+                    # North
+                    if i-1 > 0:
+                        grid[i][j].set_neighbour(grid[i-1][j], 0)
                 except Exception:
                     pass
                 try:
-                    # Right
-                    grid[i][j].set_neighbour(grid[i][j+1], 1)
+                    # East
+                    if j+1 < size[1]:
+                        grid[i][j].set_neighbour(grid[i][j+1], 1)
                 except Exception:
                     pass
                 try:
-                    # Down
-                    grid[i][j].set_neighbour(grid[i+1][j], 2)
+                    # South
+                    if i+1 < size[0]:
+                        grid[i][j].set_neighbour(grid[i+1][j], 2)
                 except Exception:
                     pass
                 try:
-                    # Left
-                    grid[i][j].set_neighbour(grid[i][j-1], 3)
+                    # West
+                    if j-1 > 0:
+                        grid[i][j].set_neighbour(grid[i][j-1], 3)
                 except Exception:
                     pass
+
+        # Still Faking
+        grid[0][0].update_neighbours();
 
     def ensureOuterWalls(self, grid):
         for i in range(0, len(grid)):
@@ -123,30 +136,30 @@ class Generator:
         count = 0
         for i in range(0, len(grid)):
             for j in range(0, len(grid[i])):
-                grid[i][j] = Module(copy.copy([Generator.key_templates[count]]))
+                grid[i][j] = Module(possibilities=copy.copy([Generator.key_templates[count]]), position=[i,j])
                 grid[i][j].collapsed = True
                 count += 1
         # Set modules' neighbours
         for i in range(0, size[0]):
             for j in range(0, size[1]):
                 try:
-                    # Up
-                    grid[i][j].set_neighbour(grid[i-1][j], 0)
+                    # North
+                    grid[i][j].set_neighbour(grid[i - 1][j], 0)
                 except Exception:
                     pass
                 try:
-                    # Right
-                    grid[i][j].set_neighbour(grid[i][j+1], 1)
+                    # East
+                    grid[i][j].set_neighbour(grid[i][j + 1], 1)
                 except Exception:
                     pass
                 try:
-                    # Down
-                    grid[i][j].set_neighbour(grid[i+1][j], 2)
+                    # South
+                    grid[i][j].set_neighbour(grid[i + 1][j], 2)
                 except Exception:
                     pass
                 try:
-                    # Left
-                    grid[i][j].set_neighbour(grid[i][j-1], 3)
+                    # West
+                    grid[i][j].set_neighbour(grid[i][j - 1], 3)
                 except Exception:
                     pass
 
