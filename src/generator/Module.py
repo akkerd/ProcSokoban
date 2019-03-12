@@ -54,15 +54,15 @@ class Module:
                 if len(self.neighbours[i].PossibilitySpace) is 0:
                     self.neighbours[i].contradiction = True
                     print("Contradiction found. Starting over algorithm...")
-                    break
+                    return 0
                 # Check if last available option connects
                 elif len(self.neighbours[i].PossibilitySpace) is 1:
-                    if self.neighbours[i].PossibilitySpace[0].template.borders[i].connects(self.neighbours[i].PossibilitySpace[0].template.borders[(i+2) % 4]):
-                        print("Last availabe option connects!")
+                    if self.neighbours[i].PossibilitySpace[0].template.borders[(i+2) % 4].connects(self.PossibilitySpace[0].template.borders[i]):
+                        # print("Last availabe option connects!")
                         self.neighbours[i].collapsed = True
                     else:
                         # Run into contradiction because the last available option does not connect
-                        print("Last available option does not connect")
+                        print("Last available option does not connect!")
                         self.neighbours[i].contradiction = True
         self.updated = True
 

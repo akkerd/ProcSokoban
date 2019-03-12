@@ -2,11 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a068661b-4f62-4ebe-a331-a6231e8a64b1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" afterPath="$PROJECT_DIR$/.vscode/launch.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/LevelParser/Border.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/LevelParser/Border.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/LevelParser/Template.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/LevelParser/Template.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Levels/Test.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Levels/Test.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/generator/Generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/Generator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/generator/Module.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/generator/Module.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generator/main.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -20,22 +22,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/generator/main.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="202">
-              <caret line="12" column="57" lean-forward="true" selection-start-line="12" selection-start-column="57" selection-end-line="12" selection-end-column="57" />
-              <folding>
-                <element signature="e#0#45#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/generator/Generator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="861">
-              <caret line="122" lean-forward="true" selection-start-line="122" selection-end-line="124" selection-end-column="39" />
+            <state relative-caret-position="138">
+              <caret line="45" column="46" lean-forward="true" selection-start-line="45" selection-start-column="46" selection-end-line="45" selection-end-column="46" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -52,11 +42,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/generator/Module.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-76">
-              <caret line="51" selection-start-line="51" selection-end-line="51" />
+            <state relative-caret-position="93">
+              <caret line="59" column="80" lean-forward="true" selection-start-line="59" selection-start-column="80" selection-end-line="59" selection-end-column="80" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -65,19 +55,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://C:/Program Files/Python37/Lib/random.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="122">
-              <caret line="199" selection-start-line="199" selection-end-line="199" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/LevelParser/Border.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="114">
-              <caret line="3" selection-start-line="3" selection-end-line="3" />
+            <state relative-caret-position="399">
+              <caret line="24" column="60" lean-forward="true" selection-start-line="24" selection-start-column="60" selection-end-line="24" selection-end-column="60" />
             </state>
           </provider>
         </entry>
@@ -121,6 +102,7 @@
       <find>print</find>
       <find>Up</find>
       <find>Upº</find>
+      <find>Contradiction</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -137,8 +119,8 @@
         <option value="$PROJECT_DIR$/src/generator/TemplateContainer.py" />
         <option value="$PROJECT_DIR$/src/LevelParser/Template.py" />
         <option value="$PROJECT_DIR$/src/generator/main.py" />
-        <option value="$PROJECT_DIR$/src/LevelParser/Border.py" />
         <option value="$PROJECT_DIR$/src/generator/Module.py" />
+        <option value="$PROJECT_DIR$/src/LevelParser/Border.py" />
         <option value="$PROJECT_DIR$/src/generator/Generator.py" />
       </list>
     </option>
@@ -264,14 +246,15 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.7690476" weight="0.15730338" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.7690476" visible="true" weight="0.15730338" />
       <window_info id="Structure" order="1" sideWeight="0.23095238" side_tool="true" weight="0.15730338" />
       <window_info id="Favorites" order="2" sideWeight="0.5011287" side_tool="true" weight="0.15730338" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3286119" />
-      <window_info active="true" anchor="bottom" auto_hide="true" x="167" y="320" width="1280" height="452" id="Run" order="2" visible="true" weight="0.5226629" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.04249292" />
+      <window_info anchor="bottom" x="-117" y="534" width="1280" height="680" id="Run" order="2" weight="0.3753541" />
+      <window_info anchor="bottom" auto_hide="true" x="1920" y="0" width="1280" height="680" id="Debug" order="3" type="FLOATING" weight="0.4716714" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3286119" />
@@ -304,6 +287,15 @@
     </layout-to-restore>
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/generator/Generator.py</url>
+          <line>44</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="tempwalls" />
@@ -427,10 +419,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/LevelParser/Border.py">
+    <entry file="file://C:/Program Files/Python37/Lib/random.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="114">
-          <caret line="3" selection-start-line="3" selection-end-line="3" />
+        <state relative-caret-position="122">
+          <caret line="199" selection-start-line="199" selection-end-line="199" />
         </state>
       </provider>
     </entry>
@@ -441,27 +433,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Program Files/Python37/Lib/random.py">
+    <entry file="file://$PROJECT_DIR$/src/LevelParser/Border.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="122">
-          <caret line="199" selection-start-line="199" selection-end-line="199" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/generator/Module.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-76">
-          <caret line="51" selection-start-line="51" selection-end-line="51" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="399">
+          <caret line="24" column="60" lean-forward="true" selection-start-line="24" selection-start-column="60" selection-end-line="24" selection-end-column="60" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generator/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="202">
-          <caret line="12" column="57" lean-forward="true" selection-start-line="12" selection-start-column="57" selection-end-line="12" selection-end-column="57" />
+        <state relative-caret-position="684">
+          <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
           <folding>
             <element signature="e#0#45#0" expanded="true" />
           </folding>
@@ -470,10 +452,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generator/Generator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="861">
-          <caret line="122" lean-forward="true" selection-start-line="122" selection-end-line="124" selection-end-column="39" />
+        <state relative-caret-position="138">
+          <caret line="45" column="46" lean-forward="true" selection-start-line="45" selection-start-column="46" selection-end-line="45" selection-end-column="46" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/generator/Module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="93">
+          <caret line="59" column="80" lean-forward="true" selection-start-line="59" selection-start-column="80" selection-end-line="59" selection-end-column="80" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>

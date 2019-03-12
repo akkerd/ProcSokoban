@@ -21,7 +21,8 @@ class Border:
 
     def connects(self, other):
         if self.BorderSize == other.BorderSize:
-            if self.MinimumConnectionSize == other.MinimumConnectionSize:
+            if self.MinimumConnectionSize == other.MinimumConnectionSize \
+                    and self.MinimumConnectionSize is not 0:
                 # if self.Connections == other.Connections:
                 #     return True
                 i = 0

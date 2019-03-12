@@ -1,7 +1,7 @@
 import copy
 import random
-from src.generator.Module import Module
-from src.generator.TemplateContainer import TemplateContainer
+from Generator.Module import Module
+from Generator.TemplateContainer import TemplateContainer
 
 
 class Generator:
@@ -25,8 +25,7 @@ class Generator:
         print("Templates: ", Generator.key_templates)
         print("Wildcards: ", Generator.wildcards)
 
-        # NOTE: Wave Function Collapse
-
+        ################### Wave Function Collapse ###################
         # NOTE: Fill grid with Modules
         self.reset_grid(templategrid, size)
         # self.fake_solution(templategrid, size)
@@ -56,6 +55,7 @@ class Generator:
                         # Contradiction found
                         print("Reseting grid...")
                         self.reset_grid(templategrid, size)
+                        break
             if all_collapsed:
                 finished = True
 
@@ -90,15 +90,15 @@ class Generator:
                 grid[i][j] = Module(possibilities=copy.copy(Generator.key_templates), position=[i,j])
 
         # Faking solution
-        grid[0][0] = Module( possibilities=[copy.copy(Generator.key_templates[0])], position=[0,0])
-        grid[0][0].collapsed = True
+        # grid[0][0] = Module( possibilities=[copy.copy(Generator.key_templates[0])], position=[0,0])
+        # grid[0][0].collapsed = True
 
         # Set modules' neighbours
         for i in range(0, size[0]):
             for j in range(0, size[1]):
                 try:
                     # North
-                    if i-1 > 0:
+                    if i-1 > -1:
                         grid[i][j].set_neighbour(grid[i-1][j], 0)
                 except Exception:
                     pass
@@ -116,13 +116,13 @@ class Generator:
                     pass
                 try:
                     # West
-                    if j-1 > 0:
+                    if j-1 > -1:
                         grid[i][j].set_neighbour(grid[i][j-1], 3)
                 except Exception:
                     pass
 
         # Still Faking
-        grid[0][0].update_neighbours();
+        # grid[0][0].update_neighbours()
 
     def ensureOuterWalls(self, grid):
         for i in range(0, len(grid)):
@@ -139,6 +139,7 @@ class Generator:
                 grid[i][j] = Module(possibilities=copy.copy([Generator.key_templates[count]]), position=[i,j])
                 grid[i][j].collapsed = True
                 count += 1
+        grid[1][1].collapsed = False
         # Set modules' neighbours
         for i in range(0, size[0]):
             for j in range(0, size[1]):
@@ -162,5 +163,4 @@ class Generator:
                     grid[i][j].set_neighbour(grid[i][j - 1], 3)
                 except Exception:
                     pass
-
 
