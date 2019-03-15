@@ -3,9 +3,12 @@ from LevelParser.Border import Border
 
 class Template:    
 
-    def __init__(self, name, lines, debug=False):
+    def __init__(self, name, lines):
+        """ Return a template object, containing the original level as a 
+        list of strings, borders as Border objects among other
+        name : string
+        lines : [string]"""
 
-        self.Debug = debug
         self.Ncols = 0
         self.Nrows = 0
         # borders = [UP, RIGHT, DOWN, LEFT]

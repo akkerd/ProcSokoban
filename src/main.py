@@ -1,39 +1,17 @@
-import glob
-import os
-import errno
-
+from IO.Utils import read_templates, print_and_write_grid
 from LevelParser.Template import Template
 from Generator.Generator import Generator
 
 # Read all the key-templates adn wildcards from folder
-path = os.path.dirname(os.path.abspath(__file__)) + "\Templates\*"
-print(path)
-key_template_list = []
-wildcard_list = []
-files = glob.glob(path)
-for name in files:
-    try:
-        if name[-2:] == "kt":
-            key_template_list.append(Template(name=name, lines=open(name, "r").read().splitlines()))
-        elif name[-2:] == "wc":
-            wildcard_list.append(Template(name=name, lines=open(name, "r").read().splitlines()))            
-    except IOError as exc:
-        print(exc)
-        if exc.errno != errno.EISDIR:
-            raise
-    print("Name: ", name)
+key_template_list, wildcard_list = read_templates()
 
-# template_list.append(Template("src/Templates/test1.kt", debug=True))
-# template_list.append(Template("src/Templates/test2.kt", debug=True))
-# template_list.append(Template("src/Templates/test3.kt", debug=True))
-# template_list.append(Template("src/Templates/test4.kt", debug=True))
-# template_list.append(Template("src/Templates/test5.kt", debug=True))
+for count, kt in enumerate(key_template_list):
+    key_template_list[count] = Template(name=kt["name"], lines=kt["lines"])
+for count, wc in enumerate(wildcard_list):
+    wildcard_list[count] = Template(name=wc["name"], lines=wc["lines"])
 
-generator = Generator(key_templates=key_template_list)
-outGrid = generator.getlevel(size=[2, 2], surroundWalls=False)
+generator = Generator(key_templates=key_template_list, wildcards=wildcard_list, seed=123)
+outGrid = generator.get_level(size=[2, 2], surroundWalls=False)
 
-WriteStream = open("src/Levels/Test.lvl", "w+")
-for row in outGrid.values():
-    print("Row by row: ", row)
-    WriteStream.write(row+"\n")
-WriteStream.close()
+print("Final Iteration: ")
+print_and_write_grid(outGrid, "src/Levels/Test.lvl")
