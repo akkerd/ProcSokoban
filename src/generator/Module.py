@@ -1,14 +1,5 @@
 import random
 import copy
-from enum import Enum
-
-from Tools.scripts.pathfix import new_interpreter
-
-# class Direction(Enum):
-#     North = 0
-#     East = 1
-#     South = 2
-#     West = 3
 
 class Module:
     def __init__(self, possibilities, position):
@@ -26,6 +17,7 @@ class Module:
         index = random.randrange(0, len(self.PossibilitySpace))
         # TODO: Can be optimized?
         temp = copy.deepcopy(self.PossibilitySpace[index])
+        temp.set_rotation(random.randrange(0, 4))
         self.PossibilitySpace.clear()
         self.PossibilitySpace.append(temp)
         self.collapsed = True
@@ -41,7 +33,7 @@ class Module:
                 for neighbour_possibility in self.neighbours[i].PossibilitySpace:
                     for possibility in self.PossibilitySpace:
                         # Calculate inverse border index with function (i+2) % 4
-                        if neighbour_possibility.template.borders[(i+2) % 4].connects(possibility.template.borders[i]):
+                        if neighbour_possibility.get_border((i+2) % 4).connects(possibility.get_border(i)):
                             to_keep.add(neighbour_possibility)
 
                 # Keep only connecting possibilities
@@ -57,7 +49,7 @@ class Module:
                     return 0
                 # Check if last available option connects
                 elif len(self.neighbours[i].PossibilitySpace) is 1:
-                    if self.neighbours[i].PossibilitySpace[0].template.borders[(i+2) % 4].connects(self.PossibilitySpace[0].template.borders[i]):
+                    if self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4).connects(self.PossibilitySpace[0].get_border(i)):
                         # print("Last availabe option connects!")
                         self.neighbours[i].collapsed = True
                     else:

@@ -4,15 +4,15 @@ import errno
 
 def print_grid(grid):
     for row in grid.values():
-        print("Row by row: ", row)
+        print("Row by row: ", "".join(row))
 
 def print_and_write_grid(grid, file_path):
     WriteStream = open(file_path, "w+")
     for row in grid.values():
-        print("Row by row: ", row)
-        WriteStream.write(row+"\n")
+        line = "".join(row)
+        print("Row by row: ", line)
+        WriteStream.write(line+"\n")
     WriteStream.close()
-
 
 def read_templates():
     path = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +23,13 @@ def read_templates():
     files = glob.glob(path)
     for name in files:
         try:
-            temp = {"name":name, "lines":open(name, "r").read().splitlines()}
+            lines = open(name, "r").read().splitlines()
+            for i, line in enumerate(lines):
+                lines[i] = list(line)
+            temp = {
+                'name': name,
+                'lines': lines
+            }
             if name[-2:] == "kt":
                 key_template_list.append(temp)
             elif name[-2:] == "wc":
