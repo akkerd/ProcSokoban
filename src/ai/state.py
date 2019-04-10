@@ -91,6 +91,8 @@ class State:
                     child.action = action
                     child.g += 1
             elif action.action_type is ActionType.Push:
+                # print("Child cannot compute action type PUSH")
+                # raise EnvironmentError
                 if self.box_at(new_agent_row, new_agent_col):
                     new_box_row = new_agent_row + action.box_dir.d_row
                     new_box_col = new_agent_col + action.box_dir.d_col

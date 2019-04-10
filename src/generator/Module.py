@@ -3,6 +3,10 @@ import copy
 
 class Module:
     def __init__(self, possibilities, position):
+        '''
+            possibilities: list of TemplateContainers [Object,Object]
+            position: tuple [i,j]
+        '''
         self.Position = position
         self.PossibilitySpace = []
         self.collapsed = False
@@ -14,10 +18,11 @@ class Module:
             self.PossibilitySpace.append(template_container)
 
     def collapse_random(self):
+        if len(self.PossibilitySpace) is 0:
+            print("Possibility scape in module {}, {} is empty".format(self.Position[0], self.Position[1]))
         index = random.randrange(0, len(self.PossibilitySpace))
         # TODO: Can be optimized?
-        temp = copy.deepcopy(self.PossibilitySpace[index])
-        temp.set_rotation(random.randrange(0, 4))
+        temp = self.PossibilitySpace[index]
         self.PossibilitySpace.clear()
         self.PossibilitySpace.append(temp)
         self.collapsed = True
