@@ -1,45 +1,63 @@
 import random
+import copy
 from generator.template_container import TemplateContainer
 from generator.grid import Grid
 # from io.utils import print_grid
 
 
 class Generator:
-    key_templates = []
-    wildcards = []
+    keys = set()
+    wildcards = set()
+    goals = set()
 
     def __init__(
         self,
-        key_templates,
-        wildcards=[],
+        keys,
+        wildcards,
+        goals,
         seed=None,
-        pRotation=False,
-        pFlipping=False,
-        pPrioritize_loops=False,
-        pPrioritize_double_edge_nodes=False,
-        pPrioritize_triple_edge_nodes=False
+        doRotation=False,
+        doFlipping=False,
     ):
         '''
-            key_templates: list of Templates [Object, Object]
+            keys: list of Templates [Object, Object]
             wildcards: list of Templates [Object, Object]
+            goals: list of Templates [Object, Object]
             seed: integer
         '''
         # Add every template to a container
-        for template in key_templates:
-            Generator.key_templates.append(TemplateContainer(template=template))
-            if pRotation:
-                for rot in range(0, 4):
-                    Generator.key_templates.append(
-                        TemplateContainer(template=template, rotation=rot)
-                    )
-            else:
-                Generator.key_templates.append(
-                    TemplateContainer(template=template, rotation=0)
-                )
+        if doRotation:
+            for rot in range(0, 4):
+                for template in keys:
+                    Generator.keys.add(TemplateContainer(template=template, rotation=rot))
+                for wildcard in wildcards:
+                    Generator.wildcards.add(TemplateContainer(template=wildcard, rotation=rot))
+                for goal in goals:
+                    Generator.goals.add(TemplateContainer(template=goal, rotation=rot))
+        else:
+            for template in keys:
+                Generator.keys.add(TemplateContainer(template=template))
+            for wildcard in wildcards:
+                Generator.wildcards.add(TemplateContainer(wildcard))
+            for goal in goals:
+                Generator.goals.add(TemplateContainer(goal))
 
-        # Add every template to a container
-        for wildcard in wildcards:
-            Generator.wildcards.append(TemplateContainer(wildcard))
+        if doFlipping:
+            for template in tuple(Generator.keys):
+                temp_template = copy.copy(template)
+                temp_template.flip()
+                Generator.keys.add(temp_template)
+          
+            for wildcard in tuple(Generator.wildcards):
+                temp_template = copy.copy(wildcard)
+                temp_template.flip()
+                Generator.wildcards.add(temp_template)
+                    
+            for goal in tuple(Generator.goals):
+                temp_template = copy.copy(goal)
+                temp_template.flip()
+                Generator.goals.add(temp_template)
+
         if seed is not None:
             random.seed(seed)
 
@@ -49,7 +67,7 @@ class Generator:
 
         # Wave Function Collapse
         ## NOTE: Fill grid with Modules
-        module_grid.reset_grid(Generator.key_templates)
+        module_grid.reset_grid(Generator.keys)
         # self.fake_solution(templategrid, size)
 
         ## NOTE: Iterate updating neighbours
@@ -73,7 +91,7 @@ class Generator:
                         # Contradiction found
                         all_collapsed = False
                         print("Reseting grid...")
-                        module_grid.reset_grid(Generator.key_templates)
+                        module_grid.reset_grid(Generator.keys)
                         break
             if all_collapsed:
                 finished = True

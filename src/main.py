@@ -12,22 +12,24 @@ prioritize_double_edge_nodes = False
 prioritize_triple_edge_nodes = False
 
 # Read all the 4 rotated versions of each of the key-templates and wildcards
-key_template_list, wildcard_list = read_templates()
-for count, kt in enumerate(key_template_list):
-    key_template_list[count] = Template(name=kt["name"], lines=kt["lines"])
+keys_list = read_templates(".kt")
+wildcard_list = read_templates(".wc")
+goal_list = read_templates(".gt")
+for count, kt in enumerate(keys_list):
+    keys_list[count] = Template(name=kt["name"], lines=kt["lines"])
 for count, wc in enumerate(wildcard_list):
     wildcard_list[count] = Template(name=wc["name"], lines=wc["lines"])
+for count, gt in enumerate(goal_list):
+    goal_list[count] = Template(name=gt["name"], lines=gt["lines"])
 
 # Generation
 generator = Generator(
-    key_templates=key_template_list,
+    keys=keys_list,
     wildcards=wildcard_list,
+    goals=goal_list,
     seed=127,
-    pRotation=True,
-    pFlipping=False,
-    pPrioritize_loops=False,
-    pPrioritize_double_edge_nodes=False,
-    pPrioritize_triple_edge_nodes=False
+    doRotation=True,
+    doFlipping=True,
 )
 
 level = generator.get_level(size=[3, 3], ensureOuterWalls=True)

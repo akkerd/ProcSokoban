@@ -20,7 +20,9 @@ class Module:
     def collapse_random(self):
         if len(self.PossibilitySpace) is 0:
             print("Possibility scape in module {}, {} is empty".format(self.Position[0], self.Position[1]))
-        index = random.randrange(0, len(self.PossibilitySpace))
+            raise Exception
+        else:
+            index = random.randrange(0, len(self.PossibilitySpace), 1)
         # TODO: Can be optimized?
         temp = self.PossibilitySpace[index]
         self.PossibilitySpace.clear()

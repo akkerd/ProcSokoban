@@ -4,9 +4,17 @@ from level_parser.border import Border
 
 class TemplateContainer:
 
-    def __init__(self, template, rotation=0):
+    def __init__(self, template, rotation=0, flipped=False):
         self._template = template
         self._rotation = rotation
+        self._flipped = flipped
+
+    def __hash__(self):
+        lvl = self.get_level()
+        for index, row in enumerate(lvl):
+            lvl[index] = tuple(row)
+        temp = frozenset(lvl)
+        return hash(temp)
 
     def get_border(self, index):
         rot_idx = (index+self._rotation) % 4
@@ -21,6 +29,9 @@ class TemplateContainer:
 
     def set_rotation(self, rotation):
         self._rotation = rotation % 4
+
+    def flip(self):
+        self._flipped = True
 
     def get_level(self):
         level = copy.deepcopy(self._template.OriginalLevel)

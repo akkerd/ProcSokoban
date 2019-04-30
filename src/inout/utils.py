@@ -17,37 +17,32 @@ def print_and_write_grid(grid, file_name):
         WriteStream.write(line+"\n")
     WriteStream.close()
 
-def read_templates():
+def read_templates(extension: str):
     path = os.path.dirname(os.path.abspath(__file__))
-    path = path[:-5] + "Templates\*"
+    path = path[:-5] + "templates\*"
     print(path)
-    key_template_list = []
-    wildcard_list = []
+    template_list = []
     files = glob.glob(path)
     longest_line = 0
     for name in files:
-        if name[-3:] == ".kt" or name[-3:] == ".wc":
+        if name[-3:] == extension:
             try:
                 lines = open(name, "r").read().splitlines()
-                for i, line in enumerate(lines):
-                    # Add spaces if possible (helps in case the level was
-                    # designed forgetting about spaces as visible chars)
-                    if len(line) > longest_line:
-                        longest_line = len(line)
-                    elif len(line) < longest_line:
-                        for i in range(0, longest_line-len(line)):
+                longest_line = len(max(lines, key=lambda coll: len(coll.rstrip())))
+                for i, line in enumerate(tuple(lines)):
+                    # Add spaces if neccesary to mainatin rectangular modules 
+                    if len(line) < longest_line:
+                        for j in range(0, longest_line-len(line)):
                             line += " "
                     lines[i] = list(line)
+                    print(lines[i])
                 temp = {
-                    'name': name,
+                    'name': name.split("\\")[-1],
                     'lines': lines
                 }
-                if name[-3:] == ".kt":
-                    key_template_list.append(temp)
-                elif name[-3:] == ".wc":
-                    wildcard_list.append(temp)            
+                template_list.append(temp)       
             except IOError as exc:
                 print(exc)
                 if exc.errno != errno.EISDIR:
                     raise
-    return key_template_list, wildcard_list
+    return template_list

@@ -11,15 +11,16 @@ class Grid:
         self.Size = size
         self.Module_Grid = [[None for i in range(size[0])] for j in range(size[1])]
 
-    def reset_grid(self, key_templates):
+    def reset_grid(self, key_templates, prune_edges=False):
         '''
             key_templates: list of TemplateContainers [Object, object]
         '''
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
-                pruned_key_templates = self.prune_templates(key_templates, i, j)
-                self.Module_Grid[i][j] = \
-                    Module(possibilities=pruned_key_templates, position=[i,j])
+                possibility_space = copy.copy(key_templates)
+                if prune_edges:
+                    self.prune_templates(possibility_space, i, j)
+                self.Module_Grid[i][j] = Module(possibilities=possibility_space, position=[i, j])
 
         # Set modules' neighbours
         for i in range(0, self.Size[0]):
@@ -50,25 +51,23 @@ class Grid:
                     pass
 
     def prune_templates(self, templates, i, j):
-        pruned = copy.copy(templates)
-        to_prune_set = set()
+        ''' 
+        Prune template list of the ones that have connections 
+        where the grid ends
+        '''
+        for template in tuple(templates):
+            if template in templates:
+                if i is 0 and template.get_border(3).MinimumConnection is not 0:
+                    templates.remove(template)
+                elif i is self.Size[0]-1 and template.get_border(1).MinimumConnection is not 0:
+                    templates.remove(template)
 
-        for template in templates:
-
-            if i is 0 and template.get_border(3).MinimumConnection is not 0:
-                to_prune_set.add(template)
-            elif i is self.Size[0]-1 and template.get_border(1).MinimumConnection is not 0:
-                to_prune_set.add(template)
-
-            if j is 0 and template.get_border(0).MinimumConnection is not 0:
-                to_prune_set.add(template)
-            elif j is self.Size[1]-1 and template.get_border(2).MinimumConnection is not 0:
-                to_prune_set.add(template)
-                
-        for to_prune in to_prune_set:
-            pruned.remove(to_prune)
+                if j is 0 and template.get_border(0).MinimumConnection is not 0:
+                    templates.remove(template)
+                elif j is self.Size[1]-1 and template.get_border(2).MinimumConnection is not 0:
+                    templates.remove(template)
             
-        return pruned
+        return templates
 
     def fake_solution(self, key_templates):
         count = 0
