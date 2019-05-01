@@ -219,7 +219,7 @@ class Grid:
                 else:
                     break
             if neighbour:
-                sizes[i] = max(poss.get_border((i+2) % 4).BorderSize for poss in neighbour.PossibilitySpace)
+                sizes[i] = max(poss.get_border((i + 2) % 4).BorderSize for poss in neighbour.PossibilitySpace)
             else:
                 sizes[i] = 0
         width = max(sizes[0], sizes[2])
