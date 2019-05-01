@@ -35,7 +35,6 @@ def read_templates(extension: str):
                         for j in range(0, longest_line-len(line)):
                             line += " "
                     lines[i] = list(line)
-                    print(lines[i])
                 temp = {
                     'name': name.split("\\")[-1],
                     'lines': lines

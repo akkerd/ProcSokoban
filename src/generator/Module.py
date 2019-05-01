@@ -23,10 +23,8 @@ class Module:
             raise Exception
         else:
             index = random.randrange(0, len(self.PossibilitySpace), 1)
-        # TODO: Can be optimized?
-        temp = self.PossibilitySpace[index]
-        self.PossibilitySpace.clear()
-        self.PossibilitySpace.append(temp)
+        
+        self.PossibilitySpace = [self.PossibilitySpace[index]]
         self.collapsed = True
 
     def set_neighbour(self, neighbour, direction):
@@ -40,7 +38,7 @@ class Module:
                 for neighbour_possibility in self.neighbours[i].PossibilitySpace:
                     for possibility in self.PossibilitySpace:
                         # Calculate inverse border index with function (i+2) % 4
-                        if neighbour_possibility.get_border((i+2) % 4).connects(possibility.get_border(i)):
+                        if neighbour_possibility.get_border((i+2) % 4) == possibility.get_border(i):
                             to_keep.add(neighbour_possibility)
 
                 # Keep only connecting possibilities
@@ -56,7 +54,7 @@ class Module:
                     return 0
                 # Check if last available option connects
                 elif len(self.neighbours[i].PossibilitySpace) is 1:
-                    if self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4).connects(self.PossibilitySpace[0].get_border(i)):
+                    if self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4) == self.PossibilitySpace[0].get_border(i):
                         # print("Last availabe option connects!")
                         self.neighbours[i].collapsed = True
                     else:

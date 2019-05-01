@@ -21,9 +21,9 @@ class Template:
         # self.Walls = [[False for _ in range(self.Ncols)] for _ in range(self.Nrows)]
 
         # UpBorder
-        self.borders[0] = Border(line=''.join(lines[0]))
+        self.borders[0] = Border(line=lines[0])
         # DownBorder
-        self.borders[2] = Border(line=''.join(lines[self.Nrows-1]))
+        self.borders[2] = Border(line=lines[self.Nrows-1])
         leftline = []
         rightline = []
 
@@ -44,7 +44,7 @@ class Template:
                 # elif char in "abcdefghijklmnopqrstuvwxyz":
                 #     self.PossibleGoals[(row, col)] = char
         # RightBorder
-        self.borders[1] = Border(line=''.join(rightline))
+        self.borders[1] = Border(line=rightline)
         # LeftBorder
-        self.borders[3] = Border(line=''.join(leftline))
+        self.borders[3] = Border(line=leftline)
 

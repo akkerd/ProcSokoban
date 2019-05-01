@@ -10,6 +10,8 @@ class Grid:
     def __init__(self, size):
         self.Size = size
         self.Module_Grid = [[None for i in range(size[0])] for j in range(size[1])]
+        self.Starts = []
+        self.Goals = []
 
     def reset_grid(self, key_templates, prune_edges=False):
         '''
@@ -204,3 +206,13 @@ class Grid:
         output = [['?'] * cols] * rows
         # print("Some mocking template: ", output)
         return output
+
+    def set_start(self, start, pos: tuple):
+        self.Module_Grid[pos[0]][pos[1]].PossibilitySpace = [start]
+        self.Module_Grid[pos[0]][pos[1]].collapsed = True
+        self.Starts.append(pos)
+    
+    def set_goal(self, goal, pos: tuple):
+        self.Module_Grid[pos[0]][pos[1]].PossibilitySpace = [goal]
+        self.Module_Grid[pos[0]][pos[1]].collapsed = True
+        self.Goals.append(pos)

@@ -1,37 +1,48 @@
+import math
+
 class Border:
     
     def __init__(self, line):
-        self.Connections = [False]*len(line)
+        self.Connections = [False] * math.floor(len(line) / 5)
+        self.IsConnection = False
+
         self.BorderSize = len(line)
         self.Line = line
-        self.MinimumConnection = 0
-        i = 0
-        connection_size = 0
-        for char in line:
-            if char is not "+":
-                # Set this spot as available for connection
-                self.Connections[i] = True
-                
-                # Update minimum connection size
-                connection_size += 1
-                if connection_size > self.MinimumConnection:
-                    self.MinimumConnection = connection_size
-            else:
-                connection_size = 0
-            i += 1
 
-    def connects(self, other):
-        
+        # Check that is not a fill-in line
+        if not all(elem == ' ' for elem in line):
+            for count, char in enumerate(line):
+                i = (count-2) % 5
+                if i == 0:
+                    if char == '/':
+                        # Set this spot as available for connection
+                        self.Connections[ max(0, math.floor(count/5)) ] = True
+                        self.IsConnection = True
+
+    def __eq__(self, other):
+        """Overrides the default implementation"""
+        if not self.IsConnection or not other.IsConnection:
+            return False
         if self.BorderSize > other.BorderSize:
             big = self
             small = other
         else:
             big = other
             small = self
-        if self.MinimumConnection is not 0 and other.MinimumConnection is not 0:
-            if small.Line in big.Line:
-                return True
+
+        for i in range(0, len(self.Connections)-len(other.Connections)+1):
+            match = 0
+            for j, elem in enumerate(small.Connections):
+                if elem != big.Connections[i+j]:
+                    match = 0
+                    break
+                else:
+                    match += 1
+                    if match == len(small.Connections):
+                        return True
         return False
+        
+        
 
         # if self.MinimumConnection == other.MinimumConnection \
         #     and self.MinimumConnection is not 0:
