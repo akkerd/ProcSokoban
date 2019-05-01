@@ -2,6 +2,7 @@ import random
 import copy
 from generator.template_container import TemplateContainer
 from generator.grid import Grid
+from generator.module import State
 # from io.utils import print_grid
 
 
@@ -89,24 +90,24 @@ class Generator:
         IterationCount = 0 
         while not finished:
             chosen_one = grid.pick_random_module()
-            if chosen_one.collapsed:
+            if chosen_one.state in (State.Collapsed, State.Contradiction):
                 continue
             else:
                 chosen_one.collapse_random()
-                chosen_one.update_neighbours()
+                chosen_one.update()
 
             # Check the all templates have collapsed or start all over again
             all_collapsed = True
             for i in range(0, size[0]):
                 for j in range(0, size[1]):
-                    if not grid.is_collapsed(i, j):
+                    if not (grid.is_collapsed(i, j) or grid.is_contradiction(i, j)):
                         all_collapsed = False
-                    if grid.is_contradiction(i, j):
-                        # Contradiction found
-                        all_collapsed = False
-                        print("Reseting grid...")
-                        grid.reset_grid(Generator.starts)
-                        break
+                    # if grid.is_contradiction(i, j):
+                    #     # Contradiction found
+                    #     all_collapsed = False
+                    #     print("Reseting grid...")
+                    #     grid.reset_grid(Generator.starts)
+                    #     break
             if all_collapsed:
                 finished = True
             else: 
@@ -126,20 +127,21 @@ class Generator:
         size_x = grid.Size[0]-1
         size_y = grid.Size[1]-1
         # Check all corners first
-        if not grid.Module_Grid[ 0 ][ 0 ].collapsed:
+        if grid.Module_Grid[ 0 ][ 0 ].state in (State.Open, State.Closed):
             if start.get_border(1).IsConnection or start.get_border(2).IsConnection:
                 grid.set_start(start, (0, 0)) 
                 return True
-        if not grid.Module_Grid[ 0 ][ size_y ].collapsed:
+        if grid.Module_Grid[ 0 ][ size_y ].state in (State.Open, State.Closed):
             if start.get_border(2).IsConnection or start.get_border(3).IsConnection:
                 grid.set_start(start, (0, size_y)) 
                 return True
-        if not grid.Module_Grid[ size_x ][0].collapsed:
+        if grid.Module_Grid[ size_x ][0].state in (State.Open, State.Closed):
             if start.get_border(0).IsConnection or start.get_border(1).IsConnection:
                 grid.set_start(start, (size_x, 0)) 
                 return True
-        if not grid.Module_Grid[ size_x ][ size_y ].collapsed:
-            if start.get_border(0).IsConnection or start.get_border(3).IsConnection:
+        if grid.Module_Grid[ size_x ][ size_y ].state in (State.Open, State.Closed):
+            if start.get_border(0).IsConnection \
+                or start.get_border(3).IsConnection:
                 grid.set_start(start, (size_x, size_y)) 
                 return True
 
@@ -147,7 +149,7 @@ class Generator:
         # Check edges after
         for i in range(1, size_x):
             for j in range(1, size_y):
-                if not grid.Module_Grid[i][j].collapsed:
+                if not grid.Module_Grid[i][j].state in (State.Open, State.Closed):
                     raise NotImplementedError
 
     def place_goal(self, grid, goal):

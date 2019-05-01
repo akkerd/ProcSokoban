@@ -1,9 +1,8 @@
 import copy
 import random
-from generator.module import Module
+from generator.module import Module, State
 from generator.utils import Utils
 from inout.utils import print_grid
-
 
 class Grid:
 
@@ -12,6 +11,8 @@ class Grid:
         self.Module_Grid = [[None for i in range(size[0])] for j in range(size[1])]
         self.Starts = []
         self.Goals = []
+        self.CriticalPath = []
+        self.HaveCriticalPath = False
 
     def reset_grid(self, key_templates, prune_edges=False):
         '''
@@ -76,9 +77,9 @@ class Grid:
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
                 self.Module_Grid[i][j] = Module(possibilities=copy.copy([key_templates[count]]), position=[i,j])
-                self.Module_Grid[i][j].collapsed = True
+                self.Module_Grid[i][j].state = State.Collapsed
                 count += 1
-        self.Module_Grid[1][1].collapsed = False
+        self.Module_Grid[1][1].state = State.Collapsed
         # Set modules' neighbours
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
@@ -127,43 +128,18 @@ class Grid:
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
                 try:
-                    if self.Module_Grid[i][j].collapsed:
+                    if self.Module_Grid[i][j].state == State.Collapsed:
                         level_grid[i][j] = \
                             self.Module_Grid[i][j].PossibilitySpace[0].get_level()
                     else:
-                        size_rows = self.Module_Grid[i][j].PossibilitySpace[0].get_rows()
-                        size_cols = self.Module_Grid[i][j].PossibilitySpace[0].get_cols()
-                        level_grid[i][j] = self.create_empty_template(size_rows, size_cols)
+                        size_rows, size_cols = self.get_constraints((i, j))
+                        if self.Module_Grid[i][j].state == State.Contradiction:
+                            level_grid[i][j] = self.get_empty_template(size_rows, size_cols)
+                        else:
+                            level_grid[i][j] = self.get_temp_template(size_rows, size_cols)
                 except IndexError as e:
                     print("IndexError:", e)
         return level_grid
-
-    # NOT NEEDED - KEEP JIC
-    # def get_template_grid(self):
-    #     """ 
-    #         This function takes a grid (double dimensional list) of
-    #         Modules and turns it into a grid of Templates.
-
-    #         NOTE: Inputing a grid of something else that are not Modules
-    #         OR inputing a grid in which not all the Modules are collapsed
-    #         will make the function fail.
-    #     """
-    #     # Get module_grid into level_grid
-    #     level_grid = [[None for i in range(self.Size[0])] for j in range(self.Size[1])]
-    #     for i in range(0, self.Size[0]):
-    #         for j in range(0, self.Size[1]):
-    #             try:
-    #                 if self.Module_Grid[i][j].collapsed:
-    #                     level_grid[i][j] = \
-    #                         self.Module_Grid[i][j].PossibilitySpace[0].get_template()
-    #                 else:
-    #                     raise SystemExit
-    #             except IndexError as e:
-    #                 print("IndexError:", e)
-    #             except SystemExit as e:
-    #                 print(e)
-    #                 print("Not all Modules are collapsed when creating template grid")
-    #     return level_grid
 
     def levelgrid_to_full_level(self, level_grid, ensureOuterWalls=False):
         """ 
@@ -192,12 +168,12 @@ class Grid:
         return level
 
     def is_collapsed(self, row, col):
-        return self.Module_Grid[row][col].collapsed
+        return self.Module_Grid[row][col].state == State.Collapsed
 
     def is_contradiction(self, row, col):
-        return self.Module_Grid[row][col].contradiction
+        return self.Module_Grid[row][col].state == State.Contradiction
 
-    def create_empty_template(self, rows, cols):
+    def get_temp_template(self, rows, cols):
         try:
             if rows < 2 or cols < 2:
                 raise Exception
@@ -207,12 +183,47 @@ class Grid:
         # print("Some mocking template: ", output)
         return output
 
+    def get_empty_template(self, rows, cols):
+        try:
+            if rows < 2 or cols < 2:
+                raise Exception
+        except Exception as e:
+            print(e)
+        output = [[' '] * cols] * rows
+        # print("Some mocking template: ", output)
+        return output
+
+
     def set_start(self, start, pos: tuple):
         self.Module_Grid[pos[0]][pos[1]].PossibilitySpace = [start]
-        self.Module_Grid[pos[0]][pos[1]].collapsed = True
+        self.Module_Grid[pos[0]][pos[1]].state = State.Collapsed
         self.Starts.append(pos)
     
     def set_goal(self, goal, pos: tuple):
         self.Module_Grid[pos[0]][pos[1]].PossibilitySpace = [goal]
-        self.Module_Grid[pos[0]][pos[1]].collapsed = True
+        self.Module_Grid[pos[0]][pos[1]].state = State.Collapsed
         self.Goals.append(pos)
+
+    def get_constraints(self, pos: tuple):
+        sizes = [0] * 4
+        for i in range(0, 4):
+            j = i
+            while True:
+                # Find neighbour that is not a contradiction
+                neighbour = self.Module_Grid[pos[0]][pos[1]].neighbours.get(j)
+                if neighbour:
+                    if neighbour.state == State.Contradiction:
+                        j += 1
+                    else:
+                        break
+                else:
+                    break
+            if neighbour:
+                sizes[i] = max(poss.get_border((i+2) % 4).BorderSize for poss in neighbour.PossibilitySpace)
+            else:
+                sizes[i] = 0
+        width = max(sizes[0], sizes[2])
+        height = max(sizes[1], sizes[3])
+
+        return width, height
+            

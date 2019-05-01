@@ -1,5 +1,12 @@
 import random
 import copy
+from enum import Enum
+
+class State(Enum):
+    Closed = 0
+    Open = 1
+    Collapsed = 2
+    Contradiction = 3
 
 class Module:
     def __init__(self, possibilities, position):
@@ -9,9 +16,8 @@ class Module:
         '''
         self.Position = position
         self.PossibilitySpace = []
-        self.collapsed = False
+        self.state = State.Closed
         self.updated = False
-        self.contradiction = False
         self.neighbours = {}
 
         for template_container in possibilities:
@@ -25,47 +31,49 @@ class Module:
             index = random.randrange(0, len(self.PossibilitySpace), 1)
         
         self.PossibilitySpace = [self.PossibilitySpace[index]]
-        self.collapsed = True
+        self.state = State.Collapsed
 
     def set_neighbour(self, neighbour, direction):
         self.neighbours[direction] = neighbour
 
-    def update_neighbours(self):
+    def update(self):
+        to_keep = set()
         for i in range(0, 4):
             if self.neighbours.get(i):
                 # Check that this possibility fits with some possibility in neighbours
-                to_keep = set()
-                for neighbour_possibility in self.neighbours[i].PossibilitySpace:
-                    for possibility in self.PossibilitySpace:
+                for poss in self.PossibilitySpace:
+                    for n_poss in self.neighbours[i].PossibilitySpace:
                         # Calculate inverse border index with function (i+2) % 4
-                        if neighbour_possibility.get_border((i+2) % 4) == possibility.get_border(i):
-                            to_keep.add(neighbour_possibility)
+                        if poss.get_border(i) == n_poss.get_border((i+2) % 4):
+                            to_keep.add(poss)
 
-                # Keep only connecting possibilities
-                self.neighbours[i].PossibilitySpace = list(to_keep)
+        # Keep only connecting possibilities
+        self.PossibilitySpace = list(to_keep)
 
-                # for j in range(0, len(to_remove)):
-                #     self.neighbours[i].PossibilitySpace.remove(to_remove[j])
+        if len(self.PossibilitySpace) is 0:
+            # Check if the algorithm has run into a contradiction
+            self.state = State.Contradiction
+            print("Contradiction in ")
+            return 0
+        elif len(self.PossibilitySpace) is 1:
+            # Check if last available option connects
+            connects = False
+            for i in range(0, 4):
+                if self.neighbours.get(i):
+                    if self.PossibilitySpace[0].get_border(i) == self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4):
+                        connects = True                        
+                        print("Last availabe option connects!")
+            if connects:
+                self.neighbours[i].state = State.Collapsed
+            else:
+                # Run into contradiction because the last available option does not connect
+                print("Last available option does not connect!")
+                self.neighbours[i].state = State.Contradiction
 
-                # NOTE: Check if the algorithm has run into a contradiction
-                if len(self.neighbours[i].PossibilitySpace) is 0:
-                    self.neighbours[i].contradiction = True
-                    print("Contradiction found. Starting over algorithm...")
-                    return 0
-                # Check if last available option connects
-                elif len(self.neighbours[i].PossibilitySpace) is 1:
-                    if self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4) == self.PossibilitySpace[0].get_border(i):
-                        # print("Last availabe option connects!")
-                        self.neighbours[i].collapsed = True
-                    else:
-                        # Run into contradiction because the last available option does not connect
-                        print("Last available option does not connect!")
-                        self.neighbours[i].contradiction = True
         self.updated = True
 
         # Recurse if needed
         for neighbour in self.neighbours.values():
             if neighbour:
                 if not neighbour.updated:
-                    # if not self.collapsed:
-                    neighbour.update_neighbours()
+                    neighbour.update()
