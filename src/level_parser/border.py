@@ -16,12 +16,12 @@ class Border:
                 if i == 0:
                     if char == '/':
                         # Set this spot as available for connection
-                        self.Connections[ max(0, math.floor(count/5)) ] = True
+                        self.Connections[max(0, math.floor(count / 5))] = True
                         self.IsConnection = True
 
     def __eq__(self, other):
         """Overrides the default implementation"""
-        if not self.IsConnection or not other.IsConnection:
+        if not self.is_connection() or not other.is_connection():
             return False
         if self.BorderSize > other.BorderSize:
             big = self
@@ -42,6 +42,8 @@ class Border:
                         return True
         return False
         
+    def is_connection(self):
+        return self.IsConnection
         
 
         # if self.MinimumConnection == other.MinimumConnection \

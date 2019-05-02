@@ -1,6 +1,6 @@
 import copy
 import random
-from generator.module import Module, State
+from generator.module import Module
 from generator.utils import Utils
 from inout.utils import print_grid
 
@@ -30,28 +30,31 @@ class Grid:
             for j in range(0, self.Size[1]):
                 try:
                     # North
-                    if i-1 > -1:
-                        self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i-1][j], 0)
+                    if i - 1 > -1:
+                        self.get_module(i, j).set_neighbour(self.get_module(i - 1, j), 0)
                 except Exception:
                     pass
                 try:
                     # East
-                    if j+1 < self.Size[1]:
-                        self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i][j+1], 1)
+                    if j + 1 < self.Size[1]:
+                        self.get_module(i, j).set_neighbour(self.get_module(i, j+1), 1)
                 except Exception:
                     pass
                 try:
                     # South
-                    if i+1 < self.Size[0]:
-                        self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i+1][j], 2)
+                    if i + 1 < self.Size[0]:
+                        self.get_module(i, j).set_neighbour(self.get_module(i + 1, j), 2)
                 except Exception:
                     pass
                 try:
                     # West
-                    if j-1 > -1:
-                        self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i][j-1], 3)
+                    if j - 1 > -1:
+                        self.get_module(i, j).set_neighbour(self.get_module(i, j - 1), 3)
                 except Exception:
                     pass
+
+    def get_module(self, i, j):
+        return self.Module_Grid[i][j]
 
     def prune_templates(self, templates, i, j):
         ''' 
@@ -104,10 +107,55 @@ class Grid:
                 except Exception:
                     pass
 
-    def pick_random_module(self):
+    def pick_random(self):
         chosenI = random.randrange(0, self.Size[0])
         chosenJ = random.randrange(0, self.Size[1])
         return self.Module_Grid[chosenI][chosenJ]
+
+    def pick_next(self):
+        open_list = []
+
+        for i in range(0, self.Size[0]):
+            for j in range(0, self.Size[1]):
+                if self.get_module(i, j).is_open():
+                    open_list.append(self.get_module(i, j))
+        
+        if len(open_list) == 0:
+            raise Exception
+        # Find open modules with minimum distance from goals
+        distance_from_goal = [0] * len(open_list)
+        for k, openm in enumerate(open_list):
+            # Calculate distance from goal
+            for goal in self.Goals:
+                distance_from_goal[k] += abs(openm.Position[0] - goal[0]) + abs(openm.Position[1] - goal[1])
+        
+        min_indexes = self.locate_min_indexes(distance_from_goal)
+        
+        # NOTE: WIP - Normalize vector to compare it with other heuristic, like the connectivity of the module
+        # distance_from_goal = norm = [float(i) / sum(distance_from_goal) for i in distance_from_goal]
+        
+        if len(min_indexes) != 1:
+            # If some cells are at same distance, pick module \
+            # with minimum entropy in its PossibilitySpace
+            min_entropy = 100000
+            for m in min_indexes:
+                entropy = len(open_list[m].PossibilitySpace)
+                if entropy < min_entropy:
+                    chosen_index = m
+        else:
+            chosen_index = min_indexes[0]
+
+        return open_list[chosen_index]
+ 
+    def locate_min_indexes(self, p_list):
+        min_indexes = []
+        smallest = min(p_list)
+        for index, element in enumerate(p_list):
+                if smallest == element: # check if this element is the minimum_value
+                        min_indexes.append(index) # add the index to the list if it is
+
+        return min_indexes
+
 
     def print(self):
         level_grid = self.get_level_grid()
@@ -128,12 +176,12 @@ class Grid:
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
                 try:
-                    if self.Module_Grid[i][j].state == State.Collapsed:
+                    if self.get_module(i, j).is_collapsed():
                         level_grid[i][j] = \
                             self.Module_Grid[i][j].PossibilitySpace[0].get_level()
                     else:
                         size_rows, size_cols = self.get_constraints((i, j))
-                        if self.Module_Grid[i][j].state == State.Contradiction:
+                        if self.get_module(i, j).is_contradiction():
                             level_grid[i][j] = self.get_empty_template(size_rows, size_cols)
                         else:
                             level_grid[i][j] = self.get_temp_template(size_rows, size_cols)
@@ -167,12 +215,6 @@ class Grid:
 
         return level
 
-    def is_collapsed(self, row, col):
-        return self.Module_Grid[row][col].state == State.Collapsed
-
-    def is_contradiction(self, row, col):
-        return self.Module_Grid[row][col].state == State.Contradiction
-
     def get_temp_template(self, rows, cols):
         try:
             if rows < 2 or cols < 2:
@@ -193,16 +235,17 @@ class Grid:
         # print("Some mocking template: ", output)
         return output
 
-
     def set_start(self, start, pos: tuple):
-        self.Module_Grid[pos[0]][pos[1]].PossibilitySpace = [start]
-        self.Module_Grid[pos[0]][pos[1]].state = State.Collapsed
+        module = self.get_module(pos[0], pos[1])
+        module.collapse(start)
         self.Starts.append(pos)
+        return module
     
     def set_goal(self, goal, pos: tuple):
-        self.Module_Grid[pos[0]][pos[1]].PossibilitySpace = [goal]
-        self.Module_Grid[pos[0]][pos[1]].state = State.Collapsed
+        module = self.get_module(pos[0], pos[1])
+        module.collapse(goal)
         self.Goals.append(pos)
+        return module
 
     def get_constraints(self, pos: tuple):
         sizes = [0] * 4
@@ -212,7 +255,7 @@ class Grid:
                 # Find neighbour that is not a contradiction
                 neighbour = self.Module_Grid[pos[0]][pos[1]].neighbours.get(j)
                 if neighbour:
-                    if neighbour.state == State.Contradiction:
+                    if neighbour.is_contradiction():
                         j += 1
                     else:
                         break
@@ -226,4 +269,3 @@ class Grid:
         height = max(sizes[1], sizes[3])
 
         return width, height
-            

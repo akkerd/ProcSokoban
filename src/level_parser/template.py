@@ -18,6 +18,7 @@ class Template:
         self.OriginalLevel = lines
         self.Nrows = len(lines)
         self.Ncols = len(max(lines, key=len))
+        self.ConnectionCount = 0
         # self.Walls = [[False for _ in range(self.Ncols)] for _ in range(self.Nrows)]
 
         # UpBorder
@@ -48,3 +49,6 @@ class Template:
         # LeftBorder
         self.borders[3] = Border(line=leftline)
 
+        for border in self.borders:
+            if border.is_connection():
+                self.ConnectionCount += 1

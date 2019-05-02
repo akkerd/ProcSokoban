@@ -77,30 +77,29 @@ class Generator:
             x = 1
         else:
             # Default case, insert start (boxes) and (goals)
-            start = next(iter(Generator.starts))    
-            self.place_start(grid, start)
-            goal = next(iter(Generator.goals))
-            self.place_goal(grid, goal)
+            start_module = self.place_start(grid, random.sample(Generator.starts, 1)[0])
+            start_module.update()
+            goal_module = self.place_goal(grid, random.sample(Generator.goals, 1)[0])
+            goal_module.update()
 
-
-        # Wave Function Collapse
+        #############################################################################
+        ########################### Wave Function Collapse ##########################
+        #################################  below  ###################################
+        #############################################################################
 
         ## NOTE: Iterate updating neighbours
         finished = False
         IterationCount = 0 
         while not finished:
-            chosen_one = grid.pick_random_module()
-            if chosen_one.state in (State.Collapsed, State.Contradiction):
-                continue
-            else:
-                chosen_one.collapse_random()
-                chosen_one.update()
+            chosen_one = grid.pick_next()
+            chosen_one.collapse_random()
+            chosen_one.update()
 
             # Check the all templates have collapsed or start all over again
             all_collapsed = True
             for i in range(0, size[0]):
                 for j in range(0, size[1]):
-                    if not (grid.is_collapsed(i, j) or grid.is_contradiction(i, j)):
+                    if not grid.get_module(i, j).is_collapsed() and not grid.get_module(i, j).is_contradiction():
                         all_collapsed = False
                     # if grid.is_contradiction(i, j):
                     #     # Contradiction found
@@ -124,32 +123,28 @@ class Generator:
         return outGrid
 
     def place_start(self, grid, start):
-        size_x = grid.Size[0]-1
-        size_y = grid.Size[1]-1
+        size_x = grid.Size[0] - 1
+        size_y = grid.Size[1] - 1
         # Check all corners first
-        if grid.Module_Grid[ 0 ][ 0 ].state in (State.Open, State.Closed):
-            if start.get_border(1).IsConnection or start.get_border(2).IsConnection:
-                grid.set_start(start, (0, 0)) 
-                return True
-        if grid.Module_Grid[ 0 ][ size_y ].state in (State.Open, State.Closed):
-            if start.get_border(2).IsConnection or start.get_border(3).IsConnection:
-                grid.set_start(start, (0, size_y)) 
-                return True
-        if grid.Module_Grid[ size_x ][0].state in (State.Open, State.Closed):
-            if start.get_border(0).IsConnection or start.get_border(1).IsConnection:
-                grid.set_start(start, (size_x, 0)) 
-                return True
-        if grid.Module_Grid[ size_x ][ size_y ].state in (State.Open, State.Closed):
-            if start.get_border(0).IsConnection \
-                or start.get_border(3).IsConnection:
-                grid.set_start(start, (size_x, size_y)) 
-                return True
+        if grid.get_module(0, 0).state in (State.Open, State.Closed):
+            if start.get_border(1).is_connection() or start.get_border(2).is_connection(): 
+                return grid.set_start(start, (0, 0))
+        if grid.get_module(0, size_y).state in (State.Open, State.Closed):
+            if start.get_border(2).is_connection() or start.get_border(3).is_connection():
+                return grid.set_start(start, (0, size_y)) 
+        if grid.get_module(size_x, 0).state in (State.Open, State.Closed):
+            if start.get_border(0).is_connection() or start.get_border(1).is_connection():
+                return grid.set_start(start, (size_x, 0)) 
+        if grid.get_module(size_x, size_y).state in (State.Open, State.Closed):
+            if start.get_border(0).is_connection() \
+                or start.get_border(3).is_connection():
+                return grid.set_start(start, (size_x, size_y)) 
 
         raise NotImplementedError
         # Check edges after
         for i in range(1, size_x):
             for j in range(1, size_y):
-                if not grid.Module_Grid[i][j].state in (State.Open, State.Closed):
+                if not grid.get_module(i)(j).state in (State.Open, State.Closed):
                     raise NotImplementedError
 
     def place_goal(self, grid, goal):
@@ -163,6 +158,6 @@ class Generator:
                     max_dist = dist
                     goal_pos = (i, j)
         if goal_pos:
-            grid.set_goal(goal, (goal_pos[0], goal_pos[1]))
+            return grid.set_goal(goal, (goal_pos[0], goal_pos[1]))
         else:
             raise Exception

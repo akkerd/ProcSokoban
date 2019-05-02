@@ -23,6 +23,16 @@ class Module:
         for template_container in possibilities:
             self.PossibilitySpace.append(template_container)
 
+    def collapse(self, poss):
+        # NOTE: This is the only place where the State should 
+        # be set to collapsed and the neighbours open
+        self.PossibilitySpace = [poss]
+        self.state = State.Collapsed
+        for i in range(0, 4):
+            if self.neighbours.get(i):
+                self.neighbours[i].open()
+        self.updated = True
+
     def collapse_random(self):
         if len(self.PossibilitySpace) is 0:
             print("Possibility scape in module {}, {} is empty".format(self.Position[0], self.Position[1]))
@@ -30,13 +40,15 @@ class Module:
         else:
             index = random.randrange(0, len(self.PossibilitySpace), 1)
         
-        self.PossibilitySpace = [self.PossibilitySpace[index]]
-        self.state = State.Collapsed
+        self.collapse(self.PossibilitySpace[index])
 
     def set_neighbour(self, neighbour, direction):
         self.neighbours[direction] = neighbour
 
+
     def update(self):
+        if self.updated:
+            return True
         to_keep = set()
         for i in range(0, 4):
             if self.neighbours.get(i):
@@ -77,3 +89,16 @@ class Module:
             if neighbour:
                 if not neighbour.updated:
                     neighbour.update()
+
+    def is_collapsed(self):
+        return self.state == State.Collapsed
+
+    def is_contradiction(self):
+        return self.state == State.Contradiction
+
+    def is_open(self):
+        return self.state == State.Open
+
+    def open(self):
+        if not (self.is_collapsed() or self.is_contradiction()):
+            self.state = State.Open
