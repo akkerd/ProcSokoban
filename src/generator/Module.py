@@ -19,6 +19,7 @@ class Module:
         self.state = State.Closed
         self.updated = False
         self.neighbours = {}
+        self.complements = {}
 
         for template_container in possibilities:
             self.PossibilitySpace.append(template_container)
@@ -56,7 +57,9 @@ class Module:
                 for poss in self.PossibilitySpace:
                     for n_poss in self.neighbours[i].PossibilitySpace:
                         # Calculate inverse border index with function (i+2) % 4
-                        if poss.get_border(i) == n_poss.get_border((i+2) % 4):
+                        if poss.get_border(i) == n_poss.get_border((i + 2) % 4):
+                            # Borders fit
+
                             to_keep.add(poss)
 
         # Keep only connecting possibilities

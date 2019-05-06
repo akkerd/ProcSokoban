@@ -5,11 +5,7 @@ from inout.utils import read_templates, print_and_write_grid, print_grid
 
 # Algorithm Parameters:
 rotation = True
-flipping = False
-
-prioritize_loops = False
-prioritize_double_edge_nodes = False
-prioritize_triple_edge_nodes = False
+flipping = True
 
 # Read all the 4 rotated versions of each of the key-templates and wildcards
 start_list = read_templates(".kt")
@@ -32,17 +28,22 @@ generator = Generator(
     doFlipping=True,
 )
 
-level = generator.get_level(size=[3, 3], ensureOuterWalls=True)
+level = generator.get_level(size=[2, 2], ensureOuterWalls=False)
 
 # AI
 # initiate_ai_solution_search(level)
 
 # Place player in level
+player_set = False
 for row in level.values():
-    if "a" in row:
+    if "a" in row and not player_set:
         row[row.index("a")] = "0"
-        break
+        player_set = True
+    if "/" in row:
+        for i, char in enumerate(row):
+            if char == "/":
+                row[i] = " "
 
 
 print("Final Iteration: ")
-print_and_write_grid(level, "Test")
+print_and_write_grid(level, "Test") 

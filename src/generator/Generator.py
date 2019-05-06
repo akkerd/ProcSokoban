@@ -7,9 +7,9 @@ from generator.module import State
 
 
 class Generator:
-    starts = set()
-    rooms = set()
-    goals = set()
+    starts = []
+    rooms = []
+    goals = []
 
     def __init__(
         self,
@@ -30,34 +30,34 @@ class Generator:
         if doRotation:
             for rot in range(0, 4):
                 for start in starts:
-                    Generator.starts.add(TemplateContainer(template=start, rotation=rot))
+                    Generator.starts.append(TemplateContainer(template=start, rotation=rot))
                 for room in rooms:
-                    Generator.rooms.add(TemplateContainer(template=room, rotation=rot))
+                    Generator.rooms.append(TemplateContainer(template=room, rotation=rot))
                 for goal in goals:
-                    Generator.goals.add(TemplateContainer(template=goal, rotation=rot))
+                    Generator.goals.append(TemplateContainer(template=goal, rotation=rot))
         else:
             for start in starts:
-                Generator.starts.add(TemplateContainer(template=start))
+                Generator.starts.append(TemplateContainer(template=start))
             for room in rooms:
-                Generator.rooms.add(TemplateContainer(template=room))
+                Generator.rooms.append(TemplateContainer(template=room))
             for goal in goals:
-                Generator.goals.add(TemplateContainer(template=goal))
+                Generator.goals.append(TemplateContainer(template=goal))
 
         if doFlipping:
             for start in tuple(Generator.starts):
                 temp_template = copy.copy(start)
                 temp_template.flip()
-                Generator.starts.add(temp_template)
+                Generator.starts.append(temp_template)
           
             for room in tuple(Generator.rooms):
                 temp_template = copy.copy(room)
                 temp_template.flip()
-                Generator.rooms.add(temp_template)
+                Generator.rooms.append(temp_template)
                     
             for goal in tuple(Generator.goals):
                 temp_template = copy.copy(goal)
                 temp_template.flip()
-                Generator.goals.add(temp_template)
+                Generator.goals.append(temp_template)
 
         if seed is not None:
             random.seed(seed)
@@ -67,7 +67,7 @@ class Generator:
         grid = Grid(size=size)
 
         # Fill grid with Modules
-        grid.reset_grid(Generator.starts)
+        grid.reset_grid(Generator.rooms)
         # self.fake_solution(templategrid, size)
 
         # Collapse main modules that define the cornerstones: 
@@ -77,14 +77,15 @@ class Generator:
             x = 1
         else:
             # Default case, insert start (boxes) and (goals)
-            start_module = self.place_start(grid, random.sample(Generator.starts, 1)[0])
+            # start_module = self.place_start(grid, random.sample(Generator.starts, 1)[0])
+            start_module = self.place_start(grid, random.choice(Generator.starts))
             start_module.update()
-            goal_module = self.place_goal(grid, random.sample(Generator.goals, 1)[0])
+            # goal_module = self.place_goal(grid, random.sample(Generator.goals, 1)[0])
+            goal_module = self.place_goal(grid, random.choice(Generator.goals))
             goal_module.update()
 
         #############################################################################
         ########################### Wave Function Collapse ##########################
-        #################################  below  ###################################
         #############################################################################
 
         ## NOTE: Iterate updating neighbours
@@ -114,11 +115,16 @@ class Generator:
                 print("Iteration #", IterationCount, ": ")
                 grid.print()
 
-        # Run AI that shuffles boxes and goals around
-        level_grid = grid.get_level_grid()
-        # print(level_grid)
+        #############################################################################
+        ######################### Run AI to shuffle elements ########################
+        #############################################################################
+        # TODO
+
+        #############################################################################
+        ############################ Final level creation ###########################
+        #############################################################################
         # Create final level
-        outGrid = grid.levelgrid_to_full_level(level_grid=level_grid, ensureOuterWalls=ensureOuterWalls)
+        outGrid = grid.get_full_level(ensureOuterWalls=ensureOuterWalls)
 
         return outGrid
 

@@ -17,7 +17,7 @@ class TemplateContainer:
         return hash(temp)
 
     def get_border(self, index):
-        rot_idx = (index+self._rotation) % 4
+        rot_idx = (index + self._rotation) % 4
         border = self._template.borders[rot_idx]
         if (index <= 1 and rot_idx >= 2) or (index >= 2 and rot_idx <= 1):
             border = copy.deepcopy(border)

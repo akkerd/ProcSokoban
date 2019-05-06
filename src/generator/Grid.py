@@ -14,13 +14,13 @@ class Grid:
         self.CriticalPath = []
         self.HaveCriticalPath = False
 
-    def reset_grid(self, key_templates, prune_edges=False):
+    def reset_grid(self, templates, prune_edges=False):
         '''
-            key_templates: list of TemplateContainers [Object, object]
+            templates: list of TemplateContainers [Object, object]
         '''
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
-                possibility_space = copy.copy(key_templates)
+                possibility_space = copy.copy(templates)
                 if prune_edges:
                     self.prune_templates(possibility_space, i, j)
                 self.Module_Grid[i][j] = Module(possibilities=possibility_space, position=[i, j])
@@ -65,12 +65,12 @@ class Grid:
             if template in templates:
                 if i is 0 and template.get_border(3).MinimumConnection is not 0:
                     templates.remove(template)
-                elif i is self.Size[0]-1 and template.get_border(1).MinimumConnection is not 0:
+                elif i is self.Size[0] - 1 and template.get_border(1).MinimumConnection is not 0:
                     templates.remove(template)
 
                 if j is 0 and template.get_border(0).MinimumConnection is not 0:
                     templates.remove(template)
-                elif j is self.Size[1]-1 and template.get_border(2).MinimumConnection is not 0:
+                elif j is self.Size[1] - 1 and template.get_border(2).MinimumConnection is not 0:
                     templates.remove(template)
             
         return templates
@@ -158,11 +158,10 @@ class Grid:
 
 
     def print(self):
-        level_grid = self.get_level_grid()
-        level = self.levelgrid_to_full_level(level_grid=level_grid, ensureOuterWalls=False)
+        level = self.get_full_level()
         print_grid(level)
 
-    def get_level_grid(self, ensureOuterWalls=False):
+    def get_level_grid(self):
         """ 
             This function takes a grid (double dimensional list) of
             Modules and turns it into a grid of OriginalLevels.
@@ -177,8 +176,7 @@ class Grid:
             for j in range(0, self.Size[1]):
                 try:
                     if self.get_module(i, j).is_collapsed():
-                        level_grid[i][j] = \
-                            self.Module_Grid[i][j].PossibilitySpace[0].get_level()
+                        level_grid[i][j] = self.Module_Grid[i][j].PossibilitySpace[0].get_level()
                     else:
                         size_rows, size_cols = self.get_constraints((i, j))
                         if self.get_module(i, j).is_contradiction():
@@ -189,7 +187,7 @@ class Grid:
                     print("IndexError:", e)
         return level_grid
 
-    def levelgrid_to_full_level(self, level_grid, ensureOuterWalls=False):
+    def get_full_level(self, ensureOuterWalls=False):
         """ 
         This function takes a grid (double dimensional list) of
         Templates and turns it into a grid containing the
@@ -198,17 +196,23 @@ class Grid:
         NOTE: Inputing a grid of something else that are not
         Templates will make the function fail.
         """
+        level_grid = self.get_level_grid()
         level = {}
+        column_size = {}
+        for i in range(0, len(level_grid[0])): 
+            column_size[i] = 0
         lastRow = 0
-        for templateRowCount, templateRow in enumerate(level_grid):
-            for templateCount, template in enumerate(templateRow):
-                for rowCount, row in enumerate(template):
-                    if rowCount + lastRow in level:
-                        level[rowCount + lastRow] = \
-                            level[rowCount + lastRow] + row
+
+        for level_row_count, row_of_levels in enumerate(level_grid):            
+            for level_column_count, original_level in enumerate(row_of_levels):
+                for row_count, row in enumerate(original_level):
+                    if level.get(row_count + column_size[level_column_count]):
+                        level[row_count + column_size[level_column_count]] += row
                     else:
-                        level[rowCount + lastRow] = row
-            lastRow += len(template)
+                        level[row_count + column_size[level_column_count]] = row
+
+                # Update lenght of column
+                column_size[level_column_count] += len(level)
 
         if ensureOuterWalls:
             Utils.ensureOuterWalls(level)
@@ -231,7 +235,7 @@ class Grid:
                 raise Exception
         except Exception as e:
             print(e)
-        output = [[' '] * cols] * rows
+        output = [['X'] * cols] * rows
         # print("Some mocking template: ", output)
         return output
 
@@ -250,22 +254,37 @@ class Grid:
     def get_constraints(self, pos: tuple):
         sizes = [0] * 4
         for i in range(0, 4):
-            j = i
             while True:
                 # Find neighbour that is not a contradiction
-                neighbour = self.Module_Grid[pos[0]][pos[1]].neighbours.get(j)
+                neighbour = self.Module_Grid[pos[0]][pos[1]].neighbours.get(i)
                 if neighbour:
                     if neighbour.is_contradiction():
-                        j += 1
+                        # If contradiction found, try the next cell in the grid
+                        if i == 0:
+                            pos[0] -= 1
+                        elif i == 1:
+                            pos[1] += 1
+                        elif i == 2:
+                            pos[0] += 1
+                        elif i == 3:
+                            pos[1] -= 1
                     else:
                         break
                 else:
                     break
+                    
             if neighbour:
-                sizes[i] = max(poss.get_border((i + 2) % 4).BorderSize for poss in neighbour.PossibilitySpace)
+                if i % 2 == 0:
+                    sizes[i] = max(poss.get_cols() for poss in neighbour.PossibilitySpace)
+                else:
+                    sizes[i] = max(poss.get_rows() for poss in neighbour.PossibilitySpace)
             else:
-                sizes[i] = 0
+                sizes[i] = 5
+
         width = max(sizes[0], sizes[2])
         height = max(sizes[1], sizes[3])
+        # if width == 1 and height == 1:
+        #     print('Unclear constraint situation')
+        #     raise Exception
 
         return width, height
