@@ -1,14 +1,16 @@
 import copy
+import itertools
 from generator.utils import Utils
 from level_parser.border import Border
 
 class TemplateContainer:
 
-    def __init__(self, template, rotation=0, flipped=False, complementary=None):
+    def __init__(self, template, rotation=0, flipped=False):
         self._template = template
         self._rotation = rotation
         self._flipped = flipped
-        self._complementary = complementary
+        self._index = template.Index
+        self._complementary = template.Complementary
 
     def __hash__(self):
         lvl = self.get_level()
@@ -59,8 +61,18 @@ class TemplateContainer:
         return self._complementary is None
 
     def get_complementary(self):
-        temp = {}
-        for key, value in self._complementary.items():
-            index = (key + self._rotation) % 4
-            temp[index] = value
-
+        comp = {}
+        for comp_index in self._complementary:
+            index_diff = tuple(x - y for x, y in zip(self._index, comp_index))
+            rotated_comp_index = (comp_index[0] + self._rotation % 4, comp_index[1] + self._rotation % 4)
+            if index_diff == (0, 1):
+                comp[0 + self._rotation] = rotated_comp_index
+            elif index_diff == (1, 0):
+                comp[1 + self._rotation] = rotated_comp_index
+            elif index_diff == (0, -1):
+                comp[2 + self._rotation] = rotated_comp_index
+            elif index_diff == (-1, 0):
+                comp[3 + self._rotation] = rotated_comp_index
+            else:
+                print("Not considered case?")
+        return comp

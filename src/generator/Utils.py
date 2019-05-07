@@ -12,7 +12,7 @@ class Utils:
     @staticmethod
     def ensureOuterWalls(grid):
         for i in range(0, len(grid)):
-            if i is 0 or i is len(grid)-1:
-                    grid[i] = ["+"] * (len(grid[i])-1)
+            if i is 0 or i is len(grid) - 1:
+                    grid[i] = ["+"] * (len(grid[i]) - 1)
             else:
-                grid[i] = ["+"] + grid[i][1:len(grid[i])-2] + ["+"]
+                grid[i] = ["+"] + grid[i][1:len(grid[i]) - 2] + ["+"]

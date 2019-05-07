@@ -14,19 +14,50 @@ starts = []
 rooms = []
 goals = []
 for extension, template_list in templates.items():
-    # TODO: CHECK HERE IF TEMPLATE SIZE IS BIGGER THAN 5x5 
-    # AND SPLIT ACCORDINGLY, USING THE ATTRIBUTE "complementary"
-    for template in template_list:
-        print("Template height: " + str(len(template['lines'])) + " and width: " + str(max(len(x) for x in template['lines'])))
-        if len(template['lines']) % 5 != 0 or max(len(x) for x in template['lines']) % 5 != 0:
+    # Check here if template size is bigger than 5x5 
+    # and split accordingly, using the attribute "complementary"
+    for template in list(template_list):
+        t_height = len(template['lines'])
+        t_width = max(len(x) for x in template['lines'])
+        print("Template height: " + str(t_height) + " and width: " + str(t_width))
+        
+        if t_height % 5 != 0 or t_width % 5 != 0:
+            # Check that sizes are multiple of 5
             print("This template does not have the right size format.")
-            raise Exception            
+            raise Exception  
+
+        templates_toadd = []
+        if t_height > 5 or t_width > 5:
+            # Split templates if size is bigger than 5x5
+            t_name = template["name"]
+            t_lines = template["lines"]
+            for i in range(0, int(t_height / 5)):
+                for j in range(0, int(t_width / 5)):
+                    temp = {
+                        'name': t_name,
+                        'lines': [t_lines[i][j * 5:(j + 1) * 5] for i in range(i * 5, (i + 1) * 5)],
+                        'index': (i, j)
+                    }
+                    templates_toadd.append(temp)
+            
+            template_list.remove(template)
+            for new_temp in templates_toadd:
+                new_temp['complementary'] = [x['index'] for x in templates_toadd if new_temp != x]
+                template_list.append(new_temp)
+    
+    for template in template_list:
+        if template['complementary']:
+            temp_obj = Template(name=template["name"], lines=template["lines"], \
+                index=template["index"], complementary=template['complementary'])
+        else:
+            temp_obj = Template(name=template["name"], lines=template["lines"])
+
         if extension == "kt":
-            starts.append(Template(name=template["name"], lines=template["lines"]))
+            starts.append(temp_obj)
         elif extension == "wc":
-            rooms.append(Template(name=template["name"], lines=template["lines"]))
+            rooms.append(temp_obj)
         elif extension == "gt":
-            goals.append(Template(name=template["name"], lines=template["lines"]))
+            goals.append(temp_obj)
 
 # Generation
 generator = Generator(

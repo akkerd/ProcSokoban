@@ -3,7 +3,7 @@ from level_parser.border import Border
 
 class Template:    
 
-    def __init__(self, name, lines, complement=None):
+    def __init__(self, name, lines, index=(0, 0), complementary=None):
         """ 
             Return a template object, containing the original level
             as a list of strings and borders as Border objects, among others.
@@ -18,6 +18,8 @@ class Template:
         self.OriginalLevel = lines
         self.Nrows = len(lines)
         self.Ncols = len(max(lines, key=len))
+        self.Index = index
+        self.Complementary = complementary
         self.ConnectionCount = 0
         # self.Walls = [[False for _ in range(self.Ncols)] for _ in range(self.Nrows)]
 
