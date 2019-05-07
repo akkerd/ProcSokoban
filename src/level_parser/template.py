@@ -3,7 +3,7 @@ from level_parser.border import Border
 
 class Template:    
 
-    def __init__(self, name, lines):
+    def __init__(self, name, lines, complement=None):
         """ 
             Return a template object, containing the original level
             as a list of strings and borders as Border objects, among others.
@@ -24,7 +24,7 @@ class Template:
         # UpBorder
         self.borders[0] = Border(line=lines[0])
         # DownBorder
-        self.borders[2] = Border(line=lines[self.Nrows-1])
+        self.borders[2] = Border(line=lines[self.Nrows - 1])
         leftline = []
         rightline = []
 
@@ -33,17 +33,9 @@ class Template:
             for col, char in enumerate(line):
                 if col is 0:
                     leftline.append(char)
-                elif col is self.Ncols-1:
+                elif col is self.Ncols - 1:
                     rightline.append(char)
 
-                #### DON'T PARSE WALLS, BOXES OR GOALS IF NOT NEEDED YET ####
-                # Parse walls, boxes and goals into matrixes and lists 
-                # if char == '#':
-                #     self.Walls[row][col] = True
-                # elif char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                #     self.PossibleBoxes[(row, col)] = char
-                # elif char in "abcdefghijklmnopqrstuvwxyz":
-                #     self.PossibleGoals[(row, col)] = char
         # RightBorder
         self.borders[1] = Border(line=rightline)
         # LeftBorder

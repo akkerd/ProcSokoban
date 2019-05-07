@@ -8,21 +8,31 @@ rotation = True
 flipping = True
 
 # Read all the 4 rotated versions of each of the key-templates and wildcards
-start_list = read_templates(".kt")
-room_list = read_templates(".wc")
-goal_list = read_templates(".gt")
-for count, kt in enumerate(start_list):
-    start_list[count] = Template(name=kt["name"], lines=kt["lines"])
-for count, wc in enumerate(room_list):
-    room_list[count] = Template(name=wc["name"], lines=wc["lines"])
-for count, gt in enumerate(goal_list):
-    goal_list[count] = Template(name=gt["name"], lines=gt["lines"])
+templates = read_templates()
+
+starts = []
+rooms = []
+goals = []
+for extension, template_list in templates.items():
+    # TODO: CHECK HERE IF TEMPLATE SIZE IS BIGGER THAN 5x5 
+    # AND SPLIT ACCORDINGLY, USING THE ATTRIBUTE "complementary"
+    for template in template_list:
+        print("Template height: " + str(len(template['lines'])) + " and width: " + str(max(len(x) for x in template['lines'])))
+        if len(template['lines']) % 5 != 0 or max(len(x) for x in template['lines']) % 5 != 0:
+            print("This template does not have the right size format.")
+            raise Exception            
+        if extension == "kt":
+            starts.append(Template(name=template["name"], lines=template["lines"]))
+        elif extension == "wc":
+            rooms.append(Template(name=template["name"], lines=template["lines"]))
+        elif extension == "gt":
+            goals.append(Template(name=template["name"], lines=template["lines"]))
 
 # Generation
 generator = Generator(
-    starts=start_list,
-    rooms=room_list,
-    goals=goal_list,
+    starts=starts,
+    rooms=rooms,
+    goals=goals,
     seed=127,
     doRotation=True,
     doFlipping=True,

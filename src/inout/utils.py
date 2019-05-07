@@ -44,7 +44,7 @@ def read_templates(extension: str):
     files = glob.glob(path)
     longest_line = 0
     for name in files:
-        if name[-3:] == extension:
+        if name[-3:] == ".".join(extension):
             try:
                 lines = open(name, "r").read().splitlines()
                 
@@ -78,3 +78,56 @@ def read_templates(extension: str):
                 if exc.errno != errno.EISDIR:
                     raise
     return template_list
+
+def read_templates():
+    path = os.path.dirname(os.path.abspath(__file__))
+    path = path[:-5] + "templates\*"
+    print(path)
+    templates = {'kt': [], 'wc': [], 'gt': []}
+    files = glob.glob(path)
+    longest_line = 0
+    for name in files:
+        extension = name[-2:]
+        if extension in templates.keys():
+            try:
+                lines = open(name, "r").read().splitlines()
+                
+                # Clean up extra spaces at the right
+                for i, line in enumerate(lines):
+                    if not all(elem == ' ' for elem in line):
+                        lines[i] = line.rstrip()
+
+                # Find longest line in template
+                longest_line = len(max(lines, key=lambda coll: len(coll)))
+                # Adapt templates to have fixed 5x5 size, or multiples of that (5x10, 15x10...)
+                width = math.ceil(longest_line / 5) * 5
+                height = math.ceil(len(lines) / 5) * 5
+                
+                # Adapt width
+                for i, line in enumerate(tuple(lines)):
+                    # Add spaces if neccesary to mainatin rectangular modules 
+                    if width - len(line) > 0:
+                        for j in range(0, width - len(line)):
+                            line += " "
+                    elif width - len(line) < 0:
+                        if all(elem == ' ' for elem in line):
+                            line = " " * width
+                        else:
+                            raise Exception
+                    lines[i] = list(line)
+
+                # Adapt height
+                for k in range(0, height - len(lines)):
+                    new_line = [' '] * width
+                    lines.append(new_line)
+
+                temp = {
+                    'name': name.split("\\")[-1],
+                    'lines': lines
+                }
+                templates[extension].append(temp)
+            except IOError as exc:
+                print(exc)
+                if exc.errno != errno.EISDIR:
+                    raise
+    return templates

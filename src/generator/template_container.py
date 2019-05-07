@@ -4,10 +4,11 @@ from level_parser.border import Border
 
 class TemplateContainer:
 
-    def __init__(self, template, rotation=0, flipped=False):
+    def __init__(self, template, rotation=0, flipped=False, complementary=None):
         self._template = template
         self._rotation = rotation
         self._flipped = flipped
+        self._complementary = complementary
 
     def __hash__(self):
         lvl = self.get_level()
@@ -41,25 +42,6 @@ class TemplateContainer:
 
         # print(level)
         return level
-
-    # NOT NEEDED - KEEP JIC
-    # def get_template(self):
-    #     # Create new template
-    #     template = copy.deepcopy(self._template)
-    #     # Copy elements taking into account rotation
-    #     template.OriginalLevel = self.get_level()
-    #     template.Nrows = self.get_rows()
-    #     template.Ncols = self.get_cols()
-
-    #     tempBorder = self.get_border(0)
-    #     for i in range(0, 4):
-    #         template.borders[0] = self.get_border(i)
-    #     template.borders[self._rotation] = tempBorder
-
-    #     template.PossibleBoxes = self.get_boxes()
-    #     template.PossibleGoals = self.get_goals()
-
-    #     return template
     
     def get_rows(self):
         if self._rotation % 2 is 0:
@@ -72,4 +54,13 @@ class TemplateContainer:
             return self._template.Ncols
         else:
             return self._template.Nrows
+    
+    def needs_complementary(self):
+        return self._complementary is None
+
+    def get_complementary(self):
+        temp = {}
+        for key, value in self._complementary.items():
+            index = (key + self._rotation) % 4
+            temp[index] = value
 

@@ -26,6 +26,14 @@ class Generator:
             goals: list of Templates [Object, Object]
             seed: integer
         '''
+
+        for start in starts:
+            Generator.starts.append(TemplateContainer(template=start))
+        for room in rooms:
+            Generator.rooms.append(TemplateContainer(template=room))
+        for goal in goals:
+            Generator.goals.append(TemplateContainer(template=goal))
+
         # Add every template to a container
         if doRotation:
             for rot in range(0, 4):
