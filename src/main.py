@@ -69,7 +69,7 @@ generator = Generator(
     doFlipping=True,
 )
 
-level = generator.get_level(size=[2, 2], ensureOuterWalls=False)
+level = generator.get_level(size=[10, 10], ensureOuterWalls=False)
 
 # AI
 # initiate_ai_solution_search(level)

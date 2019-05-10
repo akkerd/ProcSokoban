@@ -64,15 +64,21 @@ class TemplateContainer:
         comp = {}
         for comp_index in self._complementary:
             index_diff = tuple(x - y for x, y in zip(self._index, comp_index))
-            rotated_comp_index = (comp_index[0] + self._rotation % 4, comp_index[1] + self._rotation % 4)
+            # rotated_comp_index = (comp_index[0] + self._rotation % 4, comp_index[1] + self._rotation % 4)
             if index_diff == (0, 1):
-                comp[0 + self._rotation] = rotated_comp_index
+                comp[0 + self._rotation] = comp_index
             elif index_diff == (1, 0):
-                comp[1 + self._rotation] = rotated_comp_index
+                comp[1 + self._rotation] = comp_index
             elif index_diff == (0, -1):
-                comp[2 + self._rotation] = rotated_comp_index
+                comp[2 + self._rotation] = comp_index
             elif index_diff == (-1, 0):
-                comp[3 + self._rotation] = rotated_comp_index
+                comp[3 + self._rotation] = comp_index
             else:
                 print("Not considered case?")
         return comp
+    
+    def get_name(self):
+        return self._template.name
+
+    def get_index(self):
+        return self._index

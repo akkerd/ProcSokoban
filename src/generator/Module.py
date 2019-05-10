@@ -32,7 +32,7 @@ class Module:
         for i in range(0, 4):
             if self.neighbours.get(i):
                 self.neighbours[i].open()
-        self.updated = True
+        # self.updated = True
 
     def collapse_random(self):
         if len(self.PossibilitySpace) is 0:
@@ -48,19 +48,34 @@ class Module:
 
 
     def update(self):
+        # This function should be the only place where a module gets updated
         if self.updated:
             return True
         to_keep = set()
-        for i in range(0, 4):
-            if self.neighbours.get(i):
-                # Check that this possibility fits with some possibility in neighbours
-                for poss in self.PossibilitySpace:
-                    for n_poss in self.neighbours[i].PossibilitySpace:
-                        # Calculate inverse border index with function (i+2) % 4
-                        if poss.get_border(i) == n_poss.get_border((i + 2) % 4):
-                            # Borders fit
+        for poss in self.PossibilitySpace:
+            req_1 = False
+            req_2 = False
+            if poss.needs_complementary():
+                # Check if neighbours contain complementary
+                for comp_neigh, comp_tuple in poss.get_complementary().items:
+                    if self.neighbours.get(comp_neigh) and not self.neighbours.get(comp_neigh).is_collapsed():
+                        for n_poss in self.neighbours[comp_neigh].PossibilitySpace:
+                            if n_poss.get_name() == poss.get_name() and n_poss.get_index() == comp_tuple:
+                                req_1 = True
+            else:
+                req_1 = True
 
-                            to_keep.add(poss)
+            for i in range(0, 4):
+                # Check connectivity with neighbours
+                if self.neighbours.get(i):
+                    # Check that this possibility fits with some possibility in neighbours
+                        for n_poss in self.neighbours[i].PossibilitySpace:
+                            # Calculate inverse border index with function (i+2) % 4
+                            if poss.get_border(i) == n_poss.get_border((i + 2) % 4):
+                                # Borders fit
+                                req_2 = True
+            if req_1 and req_2:
+                to_keep.add(poss)
 
         # Keep only connecting possibilities
         self.PossibilitySpace = list(to_keep)
@@ -78,6 +93,9 @@ class Module:
                     if self.PossibilitySpace[0].get_border(i) == self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4):
                         connects = True                        
                         print("Last availabe option connects!")
+                else:
+                    # Allow connection if last available option connects with out-of-gri
+                    connects = True                        
             if connects:
                 self.neighbours[i].state = State.Collapsed
             else:

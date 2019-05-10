@@ -86,10 +86,17 @@ class Generator:
         else:
             # Default case, insert start (boxes) and (goals)
             # start_module = self.place_start(grid, random.sample(Generator.starts, 1)[0])
-            start_module = self.place_start(grid, random.choice(Generator.starts))
+            start_temp = random.choice(Generator.starts)
+            while start_temp.Index != (0, 0):
+                start_temp = random.choice(Generator.starts)
+            start_module = self.place_start(grid, start_temp)
             start_module.update()
+
             # goal_module = self.place_goal(grid, random.sample(Generator.goals, 1)[0])
-            goal_module = self.place_goal(grid, random.choice(Generator.goals))
+            goal_temp = random.choice(Generator.goals)
+            while goal_temp.Index != (0, 0):
+                goal_temp = random.choice(Generator.goals)
+            goal_module = self.place_goal(grid, goal_temp)
             goal_module.update()
 
         #############################################################################
@@ -137,29 +144,15 @@ class Generator:
         return outGrid
 
     def place_start(self, grid, start):
-        size_x = grid.Size[0] - 1
-        size_y = grid.Size[1] - 1
-        # Check all corners first
-        if grid.get_module(0, 0).state in (State.Open, State.Closed):
-            if start.get_border(1).is_connection() or start.get_border(2).is_connection(): 
-                return grid.set_start(start, (0, 0))
-        if grid.get_module(0, size_y).state in (State.Open, State.Closed):
-            if start.get_border(2).is_connection() or start.get_border(3).is_connection():
-                return grid.set_start(start, (0, size_y)) 
-        if grid.get_module(size_x, 0).state in (State.Open, State.Closed):
-            if start.get_border(0).is_connection() or start.get_border(1).is_connection():
-                return grid.set_start(start, (size_x, 0)) 
-        if grid.get_module(size_x, size_y).state in (State.Open, State.Closed):
-            if start.get_border(0).is_connection() \
-                or start.get_border(3).is_connection():
-                return grid.set_start(start, (size_x, size_y)) 
-
-        raise NotImplementedError
-        # Check edges after
-        for i in range(1, size_x):
-            for j in range(1, size_y):
-                if not grid.get_module(i)(j).state in (State.Open, State.Closed):
-                    raise NotImplementedError
+        grid_height = grid.Size[0] - 1
+        grid_width = grid.Size[1] - 1
+                
+        if start.Complementary:
+            # Find complementary nodes 
+            complementary = [x for x in Generator.starts if x.Name == start.Name and x.Index != start.Index]
+            grid.set_start(start, complementary)
+        else:
+            grid.set_start(start, complementary)
 
     def place_goal(self, grid, goal):
         start_pos = grid.Starts[0]
