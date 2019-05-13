@@ -18,6 +18,7 @@ class Module:
         self.PossibilitySpace = []
         self.state = State.Closed
         self.updated = False
+        self.checked = False
         self.neighbours = {}
         self.complements = {}
 
@@ -27,11 +28,24 @@ class Module:
     def collapse(self, poss):
         # NOTE: This is the only place where the State should 
         # be set to collapsed and the neighbours open
+        if self.is_collapsed():
+            return False
+
         self.PossibilitySpace = [poss]
         self.state = State.Collapsed
+        
+        # Collapse complementary modules
+        for neigh_i, complementary in poss.get_complementary().items():
+            if not self.neighbours.get(neigh_i) or self.neighbours[neigh_i].is_collapsed():
+                x = 1
+            else:
+                self.neighbours[neigh_i].collapse(complementary)
+
+        # Open neighbours
         for i in range(0, 4):
             if self.neighbours.get(i):
-                self.neighbours[i].open()
+                if not (self.neighbours[i].is_collapsed() or self.neighbours[i].is_contradiction()):
+                    self.neighbours[i].open()
         # self.updated = True
 
     def collapse_random(self):
@@ -83,13 +97,13 @@ class Module:
         if len(self.PossibilitySpace) is 0:
             # Check if the algorithm has run into a contradiction
             self.state = State.Contradiction
-            print("Contradiction in ")
-            return 0
+            print("Contradiction in ", self.Position)
+            self.state = State.Contradiction
         elif len(self.PossibilitySpace) is 1:
             # Check if last available option connects
             connects = False
             for i in range(0, 4):
-                if self.neighbours.get(i):
+                if self.neighbours.get(i) and not self.neighbours[i].is_contradiction():
                     if self.PossibilitySpace[0].get_border(i) == self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4):
                         connects = True                        
                         print("Last availabe option connects!")
@@ -120,6 +134,8 @@ class Module:
     def is_open(self):
         return self.state == State.Open
 
+    def is_closed(self):
+        return self.state == State.Closed
+
     def open(self):
-        if not (self.is_collapsed() or self.is_contradiction()):
-            self.state = State.Open
+        self.state = State.Open

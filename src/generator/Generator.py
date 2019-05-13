@@ -3,6 +3,7 @@ import copy
 from generator.template_container import TemplateContainer
 from generator.grid import Grid
 from generator.module import State
+from queue import PriorityQueue as prioque
 # from io.utils import print_grid
 
 
@@ -86,17 +87,13 @@ class Generator:
         else:
             # Default case, insert start (boxes) and (goals)
             # start_module = self.place_start(grid, random.sample(Generator.starts, 1)[0])
-            start_temp = random.choice(Generator.starts)
-            while start_temp.Index != (0, 0):
-                start_temp = random.choice(Generator.starts)
-            start_module = self.place_start(grid, start_temp)
+            start_module = self.place_start(grid)
+            grid.reset_update()
             start_module.update()
 
             # goal_module = self.place_goal(grid, random.sample(Generator.goals, 1)[0])
-            goal_temp = random.choice(Generator.goals)
-            while goal_temp.Index != (0, 0):
-                goal_temp = random.choice(Generator.goals)
-            goal_module = self.place_goal(grid, goal_temp)
+            goal_module = self.place_goal(grid)
+            grid.reset_update()
             goal_module.update()
 
         #############################################################################
@@ -109,6 +106,7 @@ class Generator:
         while not finished:
             chosen_one = grid.pick_next()
             chosen_one.collapse_random()
+            grid.reset_update()
             chosen_one.update()
 
             # Check the all templates have collapsed or start all over again
@@ -143,28 +141,51 @@ class Generator:
 
         return outGrid
 
-    def place_start(self, grid, start):
+    def place_start(self, grid):
+        start = random.choice(Generator.starts)
+        while start.get_index() not in [(0, 0), (0, int(start.get_cols() / 5)), (int(start.get_rows() / 5), 0), (int(start.get_rows() / 5), int(start.get_cols() / 5))]:
+                start = random.choice(Generator.starts)
+
         grid_height = grid.Size[0] - 1
         grid_width = grid.Size[1] - 1
-                
-        if start.Complementary:
-            # Find complementary nodes 
-            complementary = [x for x in Generator.starts if x.Name == start.Name and x.Index != start.Index]
-            grid.set_start(start, complementary)
-        else:
-            grid.set_start(start, complementary)
+        if start.get_index() == (0, 0):
+            module = grid.set_start(start, (0, 0), Generator.starts)
+        elif start.get_index() == (0, int(start.get_cols() / 5)):
+            module = grid.set_start(start, (0, grid_width), Generator.starts)
+        elif start.get_index() == (int(start.get_rows() / 5), 0):
+            module = grid.set_start(start, (grid_height, 0), Generator.starts)
+        elif start.get_index() == (int(start.get_rows() / 5), int(start.get_cols() / 5)):
+            module = grid.set_start(start, (grid_height, grid_width), Generator.starts)
+        
+        return module
 
-    def place_goal(self, grid, goal):
+    def place_goal(self, grid):
         start_pos = grid.Starts[0]
-        max_dist = 0
-        for i in range(0, grid.Size[0]):
-            for j in range(0, grid.Size[1]):
-                # Manhattan distance
-                dist = abs(start_pos[0] - i) + abs(start_pos[1] - j)
-                if dist > max_dist:
-                    max_dist = dist
-                    goal_pos = (i, j)
-        if goal_pos:
-            return grid.set_goal(goal, (goal_pos[0], goal_pos[1]))
-        else:
-            raise Exception
+        goal_count = 0
+        valid_goal = False
+        while not valid_goal:
+            goal = random.choice(Generator.goals)
+            module_prioque = prioque()
+            for i in range(0, grid.Size[0]):
+                for j in range(0, grid.Size[1]):
+                    # Manhattan distance
+                    dist = abs(start_pos[0] - i) + abs(start_pos[1] - j)
+                    module_prioque.put((-dist, (i, j)))
+            
+            module_pos = module_prioque.get()
+            stopped = False
+            while not grid.can_set_template(goal, module_pos[1]):
+                if module_prioque.empty():
+                    stopped = True
+                    break
+                module_pos = module_prioque.get()
+            if not stopped:
+                # Found good goal template
+                valid_goal = True
+            else:
+                # Timeout if all goals checked
+                goal_count += 1
+                if goal_count == len(Generator.goals):
+                    raise Exception
+
+        return grid.set_goal(goal, (module_pos[1][0], module_pos[1][1]))

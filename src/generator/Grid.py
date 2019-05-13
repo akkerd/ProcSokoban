@@ -75,38 +75,6 @@ class Grid:
             
         return templates
 
-    def fake_solution(self, key_templates):
-        count = 0
-        for i in range(0, self.Size[0]):
-            for j in range(0, self.Size[1]):
-                self.Module_Grid[i][j] = Module(possibilities=copy.copy([key_templates[count]]), position=[i,j])
-                self.Module_Grid[i][j].state = State.Collapsed
-                count += 1
-        self.Module_Grid[1][1].state = State.Collapsed
-        # Set modules' neighbours
-        for i in range(0, self.Size[0]):
-            for j in range(0, self.Size[1]):
-                try:
-                    # North
-                    self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i - 1][j], 0)
-                except Exception:
-                    pass
-                try:
-                    # East
-                    self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i][j + 1], 1)
-                except Exception:
-                    pass
-                try:
-                    # South
-                    self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i + 1][j], 2)
-                except Exception:
-                    pass
-                try:
-                    # West
-                    self.Module_Grid[i][j].set_neighbour(self.Module_Grid[i][j - 1], 3)
-                except Exception:
-                    pass
-
     def pick_random(self):
         chosenI = random.randrange(0, self.Size[0])
         chosenJ = random.randrange(0, self.Size[1])
@@ -180,9 +148,9 @@ class Grid:
                     else:
                         size_rows, size_cols = self.get_constraints((i, j))
                         if self.get_module(i, j).is_contradiction():
-                            level_grid[i][j] = self.get_empty_template(size_rows, size_cols)
+                            level_grid[i][j] = self.get_empty_template(5, 5)
                         else:
-                            level_grid[i][j] = self.get_temp_template(size_rows, size_cols)
+                            level_grid[i][j] = self.get_temp_template(5, 5)
                 except IndexError as e:
                     print("IndexError:", e)
         return level_grid
@@ -219,27 +187,38 @@ class Grid:
 
         return level
 
-    def get_temp_template(self, rows, cols):
-        try:
-            if rows < 2 or cols < 2:
-                raise Exception
-        except Exception as e:
-            print(e)
-        output = [['?'] * cols] * rows
-        # print("Some mocking template: ", output)
-        return output
+    def can_set_template(self, template, pos: tuple):
+        module = self.get_module(pos[0], pos[1])
+        if module.checked:
+            # Avoid checking modules more than once
+            return True
+        if not module.is_collapsed():
+            if template.needs_complementary():
+                for neighbour_i in template.get_complementary().keys():
+                    if module.neighbour.get(neighbour_i):
+                        if module.neighbour[neighbour_i].is_collapsed():
+                            return False
+                        module.checked = True
+                        if not self.can_set_template(module.neighbour[neighbour_i], self.get_neighbour_pos(pos, neighbour_i)):
+                            return False
+                    else:
+                        return False
+        else:
+            return False
 
-    def get_empty_template(self, rows, cols):
-        try:
-            if rows < 2 or cols < 2:
-                raise Exception
-        except Exception as e:
-            print(e)
-        output = [['X'] * cols] * rows
-        # print("Some mocking template: ", output)
-        return output
+        return True
 
-    def set_start(self, start, pos: tuple):
+    def get_neighbour_pos(self, pos: tuple, neigh_i):
+        if neigh_i is 0:
+            return (pos[0] - 1, pos[1])
+        elif neigh_i is 1:
+            return (pos[0], pos[1] + 1)
+        elif neigh_i is 2:
+            return (pos[0] + 1, pos[1])
+        elif neigh_i is 3:
+            return (pos[0], pos[1] - 1)
+
+    def set_start(self, start, pos: tuple, starts):
         module = self.get_module(pos[0], pos[1])
         module.collapse(start)
         self.Starts.append(pos)
@@ -253,21 +232,23 @@ class Grid:
 
     def get_constraints(self, pos: tuple):
         sizes = [0] * 4
+        row = pos[0]
+        col = pos[1]
         for i in range(0, 4):
             while True:
                 # Find neighbour that is not a contradiction
-                neighbour = self.Module_Grid[pos[0]][pos[1]].neighbours.get(i)
+                neighbour = self.Module_Grid[row][col].neighbours.get(i)
                 if neighbour:
                     if neighbour.is_contradiction():
                         # If contradiction found, try the next cell in the grid
                         if i == 0:
-                            pos[0] -= 1
+                            row -= 1
                         elif i == 1:
-                            pos[1] += 1
+                            col += 1
                         elif i == 2:
-                            pos[0] += 1
+                            row += 1
                         elif i == 3:
-                            pos[1] -= 1
+                            col -= 1
                     else:
                         break
                 else:
@@ -288,3 +269,33 @@ class Grid:
         #     raise Exception
 
         return width, height
+    
+    def get_temp_template(self, rows, cols):
+        try:
+            if rows < 2 or cols < 2:
+                raise Exception
+        except Exception as e:
+            print(e)
+        output = [['?'] * cols] * rows
+        # print("Some mocking template: ", output)
+        return output
+
+    def get_empty_template(self, rows, cols):
+        try:
+            if rows < 2 or cols < 2:
+                raise Exception
+        except Exception as e:
+            print(e)
+        output = [['X'] * cols] * rows
+        # print("Some mocking template: ", output)
+        return output
+
+    def reset_update(self):
+        for i in range(0, self.Size[0]):
+            for j in range(0, self.Size[1]):
+                self.get_module(i, j).updated = False
+    
+    def reset_check(self):
+        for i in range(0, self.Size[0]):
+            for j in range(0, self.Size[1]):
+                self.get_module(i, j).checked = False
