@@ -1,5 +1,6 @@
 import random
 import copy
+from level_parser.template import Template
 from generator.template_container import TemplateContainer
 from generator.grid import Grid
 from generator.module import State
@@ -8,15 +9,10 @@ from queue import PriorityQueue as prioque
 
 
 class Generator:
-    starts = []
-    rooms = []
-    goals = []
 
     def __init__(
         self,
-        starts,
-        rooms,
-        goals,
+        prototemplates,
         seed=None,
         doRotation=False,
         doFlipping=False,
@@ -27,46 +23,56 @@ class Generator:
             goals: list of Templates [Object, Object]
             seed: integer
         '''
+        self.starts = []
+        self.rooms = []
+        self.goals = []
 
-        for start in starts:
-            Generator.starts.append(TemplateContainer(template=start))
-        for room in rooms:
-            Generator.rooms.append(TemplateContainer(template=room))
-        for goal in goals:
-            Generator.goals.append(TemplateContainer(template=goal))
+        # Parse prototemplates into Template objects
+        for extension, prototemplate_list in prototemplates.items(): 
+            template_list = []
+            for prototemplate in prototemplate_list:
+                if prototemplate['complementary']:
+                    template_list.append(Template(name=prototemplate["name"], lines=prototemplate["lines"], \
+                        index=prototemplate["index"], complementary=prototemplate['complementary']))
+                else:
+                    template_list.append(Template(name=prototemplate["name"], lines=prototemplate["lines"]), index=(0, 0))
+            for template in template_list:
+                # Find complementary templates and add template references
+                if template.needs_complementary():
+                    complementary_list = [x for x in template_list if x.Index in template.Complementary and x.Name == template.Name]
+                    template.set_complementary_list(complementary_list)
+                # Create template_container and add it to corresponding list
+                if extension == "kt":
+                    self.starts.append(TemplateContainer(template=template))
+                elif extension == "wc":
+                    self.rooms.append(TemplateContainer(template=template))
+                elif extension == "gt":
+                    self.goals.append(TemplateContainer(template=template))
 
-        # Add every template to a container
+        # Do rotations if neccessary
         if doRotation:
             for rot in range(0, 4):
-                for start in starts:
-                    Generator.starts.append(TemplateContainer(template=start, rotation=rot))
-                for room in rooms:
-                    Generator.rooms.append(TemplateContainer(template=room, rotation=rot))
-                for goal in goals:
-                    Generator.goals.append(TemplateContainer(template=goal, rotation=rot))
-        else:
-            for start in starts:
-                Generator.starts.append(TemplateContainer(template=start))
-            for room in rooms:
-                Generator.rooms.append(TemplateContainer(template=room))
-            for goal in goals:
-                Generator.goals.append(TemplateContainer(template=goal))
-
+                for start in tuple(self.starts):
+                    start.set_rotation(rot)
+                    self.starts.append(start)
+                for room in tuple(self.rooms):
+                    room.set_rotation(rot)
+                    self.rooms.append(room)
+                for goal in tuple(self.goals):
+                    goal.set_rotation(rot)
+                    self.goals.append(goal)
+        
+        # Do flip if neccessary
         if doFlipping:
-            for start in tuple(Generator.starts):
-                temp_template = copy.copy(start)
-                temp_template.flip()
-                Generator.starts.append(temp_template)
-          
-            for room in tuple(Generator.rooms):
-                temp_template = copy.copy(room)
-                temp_template.flip()
-                Generator.rooms.append(temp_template)
-                    
-            for goal in tuple(Generator.goals):
-                temp_template = copy.copy(goal)
-                temp_template.flip()
-                Generator.goals.append(temp_template)
+            for start in tuple(self.starts):
+                start.flip()
+                self.starts.append(start)
+            for room in tuple(self.rooms):
+                room.flip()
+                self.rooms.append(room)
+            for goal in tuple(self.goals):
+                goal.flip()
+                self.goals.append(goal)
 
         if seed is not None:
             random.seed(seed)
@@ -76,7 +82,7 @@ class Generator:
         grid = Grid(size=size)
 
         # Fill grid with Modules
-        grid.reset_grid(Generator.rooms)
+        grid.reset_grid(self.rooms)
         # self.fake_solution(templategrid, size)
 
         # Collapse main modules that define the cornerstones: 
@@ -86,12 +92,12 @@ class Generator:
             x = 1
         else:
             # Default case, insert start (boxes) and (goals)
-            # start_module = self.place_start(grid, random.sample(Generator.starts, 1)[0])
+            # start_module = self.place_start(grid, random.sample(self.starts, 1)[0])
             start_module = self.place_start(grid)
             grid.reset_update()
             start_module.update()
 
-            # goal_module = self.place_goal(grid, random.sample(Generator.goals, 1)[0])
+            # goal_module = self.place_goal(grid, random.sample(self.goals, 1)[0])
             goal_module = self.place_goal(grid)
             grid.reset_update()
             goal_module.update()
@@ -119,7 +125,7 @@ class Generator:
                     #     # Contradiction found
                     #     all_collapsed = False
                     #     print("Reseting grid...")
-                    #     grid.reset_grid(Generator.starts)
+                    #     grid.reset_grid(self.starts)
                     #     break
             if all_collapsed:
                 finished = True
@@ -142,20 +148,20 @@ class Generator:
         return outGrid
 
     def place_start(self, grid):
-        start = random.choice(Generator.starts)
+        start = random.choice(self.starts)
         while start.get_index() not in [(0, 0), (0, int(start.get_cols() / 5)), (int(start.get_rows() / 5), 0), (int(start.get_rows() / 5), int(start.get_cols() / 5))]:
-                start = random.choice(Generator.starts)
+                start = random.choice(self.starts)
 
         grid_width = grid.Size[0] - 1
         grid_height = grid.Size[1] - 1
         if start.get_index() == (0, 0):
-            module = grid.set_start(start, (0, 0), Generator.starts)
+            module = grid.set_start(start, (0, 0), self.starts)
         elif start.get_index() == (0, int(start.get_cols() / 5)):
-            module = grid.set_start(start, (0, grid_width), Generator.starts)
+            module = grid.set_start(start, (0, grid_width), self.starts)
         elif start.get_index() == (int(start.get_rows() / 5), 0):
-            module = grid.set_start(start, (grid_height, 0), Generator.starts)
+            module = grid.set_start(start, (grid_height, 0), self.starts)
         elif start.get_index() == (int(start.get_rows() / 5), int(start.get_cols() / 5)):
-            module = grid.set_start(start, (grid_height, grid_width), Generator.starts)
+            module = grid.set_start(start, (grid_height, grid_width), self.starts)
         
         return module
 
@@ -164,7 +170,7 @@ class Generator:
         goal_count = 0
         valid_goal = False
         while not valid_goal:
-            goal = random.choice(Generator.goals)
+            goal = random.choice(self.goals)
             module_prioque = prioque()
             for i in range(0, grid.Size[0]):
                 for j in range(0, grid.Size[1]):
@@ -185,7 +191,7 @@ class Generator:
             else:
                 # Timeout if all goals checked
                 goal_count += 1
-                if goal_count == len(Generator.goals):
+                if goal_count == len(self.goals):
                     raise Exception
 
         return grid.set_goal(goal, (module_pos[1][0], module_pos[1][1]))
