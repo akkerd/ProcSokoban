@@ -34,6 +34,7 @@ class TemplateContainer:
         self._rotation = rotation % 4
 
     def flip(self):
+        raise NotImplementedError
         self._flipped = True
 
     def get_level(self):

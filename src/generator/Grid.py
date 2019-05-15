@@ -2,7 +2,7 @@ import copy
 import random
 from generator.module import Module
 from generator.utils import Utils
-from inout.utils import print_grid
+from inout.utils import IOUtils
 
 class Grid:
 
@@ -137,7 +137,7 @@ class Grid:
 
     def print(self):
         level = self.get_full_level()
-        print_grid(level)
+        IOUtils.print_grid(level)
 
     def get_level_grid(self):
         """ 
