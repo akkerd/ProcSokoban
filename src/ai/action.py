@@ -27,7 +27,7 @@ Dir.W = Dir('W',  0, -1)
 
 
 class ActionType:
-    Move = Push = Pull = None
+    Move = Pull = None
     
     def __init__(self, name: 'str'):
         '''
@@ -79,6 +79,9 @@ for agent_dir in (Dir.N, Dir.S, Dir.E, Dir.W):
     ALL_ACTIONS.append(Action(ActionType.Move, agent_dir, None))
     for box_dir in (Dir.N, Dir.S, Dir.E, Dir.W):
         if agent_dir.d_row + box_dir.d_row != 0 or agent_dir.d_col + box_dir.d_col != 0:
+            # print("Illegal PUSH action!!!")
+            # print("Agent at position [%i,%i] has tried to PUSH a box", agent_dir.d_row, agent_dir.d_col)
+            # raise EnvironmentError
             # If not opposite directions.
             ALL_ACTIONS.append(Action(ActionType.Push, agent_dir, box_dir))
         if agent_dir is not box_dir:
