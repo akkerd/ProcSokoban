@@ -24,9 +24,11 @@ def print_and_write_grid(grid, file_name):
         for i, char in enumerate(row):
             if char == "+":
                 row[i] = "#"
-            elif char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            elif char == "X":
+                row[i] = " "
+            elif char in "ABCDEFGHIJKLMNOPQRSTUVWYZ":
                 row[i] = "$"
-            elif char in "abcdefghijklmnopqrstuvwxyz":
+            elif char in "abcdefghijklmnopqrstuvwyz":
                 row[i] = "."
             elif char in "0123456789":
                 row[i] = "@"

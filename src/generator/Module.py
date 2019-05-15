@@ -19,6 +19,7 @@ class Module:
         self.state = State.Closed
         self.updated = False
         self.checked = False
+        self.complementary_collapse = False
         self.neighbours = {}
         self.complements = {}
 
@@ -26,27 +27,33 @@ class Module:
             self.PossibilitySpace.append(template_container)
 
     def collapse(self, poss):
-        # NOTE: This is the only place where the State should 
-        # be set to collapsed and the neighbours open
-        if self.is_collapsed():
+        # NOTE: This is the only function where the State can be
+        # is set to collapsed and the neighbours opened
+        if self.is_collapsed() and not self.complementary_collapse:
+            # Overlapping between templates
+            raise Exception
+        if self.complementary_collapse:
+            # Skip if already collapsed in complementary pass
             return False
+
+        self.complementary_collapse = True
+
+        # Collapse complementary modules
+        for neigh_i, complementary in poss.get_complementary().items():
+            if not self.neighbours.get(neigh_i):
+                raise Exception
+            else:
+                self.neighbours[neigh_i].collapse(complementary)
 
         self.PossibilitySpace = [poss]
         self.state = State.Collapsed
-        
-        # Collapse complementary modules
-        for neigh_i, complementary in poss.get_complementary().items():
-            if not self.neighbours.get(neigh_i) or self.neighbours[neigh_i].is_collapsed():
-                x = 1
-            else:
-                self.neighbours[neigh_i].collapse(complementary)
 
         # Open neighbours
         for i in range(0, 4):
             if self.neighbours.get(i):
                 if not (self.neighbours[i].is_collapsed() or self.neighbours[i].is_contradiction()):
                     self.neighbours[i].open()
-        # self.updated = True
+
 
     def collapse_random(self):
         if len(self.PossibilitySpace) is 0:
@@ -54,7 +61,7 @@ class Module:
             raise Exception
         else:
             index = random.randrange(0, len(self.PossibilitySpace), 1)
-        
+
         self.collapse(self.PossibilitySpace[index])
 
     def set_neighbour(self, neighbour, direction):
@@ -63,7 +70,7 @@ class Module:
 
     def update(self):
         # This function should be the only place where a module gets updated
-        if self.updated:
+        if self.updated or self.is_collapsed():
             return True
         to_keep = set()
         for poss in self.PossibilitySpace:
@@ -72,22 +79,28 @@ class Module:
             if poss.needs_complementary():
                 # Check if neighbours contain complementary
                 for comp_neigh, comp_tuple in poss.get_complementary().items:
+                    if req_1:
+                        break
                     if self.neighbours.get(comp_neigh) and not self.neighbours.get(comp_neigh).is_collapsed():
                         for n_poss in self.neighbours[comp_neigh].PossibilitySpace:
                             if n_poss.get_name() == poss.get_name() and n_poss.get_index() == comp_tuple:
                                 req_1 = True
+                                break
             else:
                 req_1 = True
 
             for i in range(0, 4):
                 # Check connectivity with neighbours
                 if self.neighbours.get(i):
+                    if not poss.get_border(i).IsConnection:
+                        continue
                     # Check that this possibility fits with some possibility in neighbours
-                        for n_poss in self.neighbours[i].PossibilitySpace:
-                            # Calculate inverse border index with function (i+2) % 4
-                            if poss.get_border(i) == n_poss.get_border((i + 2) % 4):
-                                # Borders fit
-                                req_2 = True
+                    for n_poss in self.neighbours[i].PossibilitySpace:
+                        # Calculate inverse border index with function (i+2) % 4
+                        if poss.get_border(i) == n_poss.get_border((i + 2) % 4):
+                            # Borders fit
+                            req_2 = True
+                            break
             if req_1 and req_2:
                 to_keep.add(poss)
 
@@ -103,19 +116,20 @@ class Module:
             # Check if last available option connects
             connects = False
             for i in range(0, 4):
-                if self.neighbours.get(i) and not self.neighbours[i].is_contradiction():
-                    if self.PossibilitySpace[0].get_border(i) == self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4):
-                        connects = True                        
+                if self.neighbours.get(i):
+                    if not self.neighbours[i].is_contradiction() and self.PossibilitySpace[0].get_border(i) == self.neighbours[i].PossibilitySpace[0].get_border((i+2) % 4):
+                        connects = True
+                        break
                         print("Last availabe option connects!")
                 else:
                     # Allow connection if last available option connects with out-of-gri
-                    connects = True                        
+                    connects = True
             if connects:
-                self.neighbours[i].state = State.Collapsed
+                self.state = State.Collapsed
             else:
                 # Run into contradiction because the last available option does not connect
                 print("Last available option does not connect!")
-                self.neighbours[i].state = State.Contradiction
+                self.state = State.Contradiction
 
         self.updated = True
 

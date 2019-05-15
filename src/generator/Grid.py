@@ -80,19 +80,29 @@ class Grid:
         chosenJ = random.randrange(0, self.Size[1])
         return self.Module_Grid[chosenI][chosenJ]
 
-    def pick_next(self):
+    def pick_next(self, ignore_modules=[]):
         open_list = []
 
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
                 if self.get_module(i, j).is_open():
-                    open_list.append(self.get_module(i, j))
+                    module = self.get_module(i, j)
+                    if module not in ignore_modules:
+                        open_list.append(module)
+
+                    if len(module.PossibilitySpace) == 0:
+                        # CHECK: Open module should have possibilities, else it would have
+                        # been set to contradiction when updating
+                        raise Exception
         
         if len(open_list) == 0:
+            # There should be open modules to continue
             raise Exception
+
         # Find open modules with minimum distance from goals
         distance_from_goal = [0] * len(open_list)
         for k, openm in enumerate(open_list):
+
             # Calculate distance from goal
             for goal in self.Goals:
                 distance_from_goal[k] += abs(openm.Position[0] - goal[0]) + abs(openm.Position[1] - goal[1])
@@ -146,7 +156,7 @@ class Grid:
                     if self.get_module(i, j).is_collapsed():
                         level_grid[i][j] = self.Module_Grid[i][j].PossibilitySpace[0].get_level()
                     else:
-                        size_rows, size_cols = self.get_constraints((i, j))
+                        # size_rows, size_cols = self.get_constraints((i, j))
                         if self.get_module(i, j).is_contradiction():
                             level_grid[i][j] = self.get_empty_template(5, 5)
                         else:
@@ -187,36 +197,35 @@ class Grid:
 
         return level
 
-    def can_set_template(self, template, pos: tuple):
+    def can_set_templatec(self, template, pos: tuple):
         module = self.get_module(pos[0], pos[1])
         if module.checked:
             # Avoid checking modules more than once
             return True
-        if not module.is_collapsed():
-            if template.needs_complementary():
-                for neighbour_i in template.get_complementary().keys():
-                    if module.neighbour.get(neighbour_i):
-                        if module.neighbour[neighbour_i].is_collapsed():
-                            return False
-                        module.checked = True
-                        if not self.can_set_template(module.neighbour[neighbour_i], self.get_neighbour_pos(pos, neighbour_i)):
-                            return False
-                    else:
-                        return False
-        else:
+        if module.is_collapsed():
             return False
+        if template.needs_complementary():
+            for neigh_i, complementary in template.get_complementary().items():
+                if not module.neighbours.get(neigh_i):
+                    return False
+            module.checked = True
+            for neigh_i, complementary in template.get_complementary().items():        
+                if not self.can_set_templatec(complementary, module.neighbours[neigh_i].Position):
+                    return False
+        else:
+            module.checked = True
 
         return True
 
-    def get_neighbour_pos(self, pos: tuple, neigh_i):
-        if neigh_i is 0:
-            return (pos[0] - 1, pos[1])
-        elif neigh_i is 1:
-            return (pos[0], pos[1] + 1)
-        elif neigh_i is 2:
-            return (pos[0] + 1, pos[1])
-        elif neigh_i is 3:
-            return (pos[0], pos[1] - 1)
+    # def get_neighbour_pos(self, pos: tuple, neigh_i):
+    #     if neigh_i is 0:
+    #         return (pos[0] - 1, pos[1])
+    #     elif neigh_i is 1:
+    #         return (pos[0], pos[1] + 1)
+    #     elif neigh_i is 2:
+    #         return (pos[0] + 1, pos[1])
+    #     elif neigh_i is 3:
+    #         return (pos[0], pos[1] - 1)
 
     def set_start(self, start, pos: tuple, starts):
         module = self.get_module(pos[0], pos[1])
@@ -299,3 +308,25 @@ class Grid:
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
                 self.get_module(i, j).checked = False
+
+    def collapse_next(self):
+        module_candidate = self.pick_next()
+        ignore_modules = []
+
+        templatec = module_candidate.PossibilitySpace[random.randrange(0, len(module_candidate.PossibilitySpace))]
+        count = 0
+        module_count = 0
+        while not self.can_set_templatec(templatec, module_candidate.Position):
+            count += 1
+            if count == len(module_candidate.PossibilitySpace):
+                module_count += 1
+                if module_count == self.Size[0] * self.Size[1]:
+                    # Can't find next module to collapse!
+                    raise Exception
+                ignore_modules.append(module_candidate)
+                module_candidate = self.pick_next(ignore_modules)
+                count = 0
+            templatec = module_candidate.PossibilitySpace[random.randrange(0, len(module_candidate.PossibilitySpace))]
+        
+        module_candidate.collapse(templatec)
+        return module_candidate

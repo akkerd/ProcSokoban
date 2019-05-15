@@ -58,23 +58,23 @@ class TemplateContainer:
             return self._template.Nrows
     
     def needs_complementary(self):
-        return self._complementary is None
+        return self._complementary is not None
 
     def get_complementary(self):
         comp = {}
         for comp_index, comp_template in self._complementary.items():
             index_diff = tuple(x - y for x, y in zip(self._index, comp_index))
             # rotated_comp_index = (comp_index[0] + self._rotation % 4, comp_index[1] + self._rotation % 4)
-            if index_diff == (0, 1):
+            if index_diff == (1, 0):
                 comp[(0 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
-            elif index_diff == (1, 0):
-                comp[(1 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
             elif index_diff == (0, -1):
-                comp[(2 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
+                comp[(1 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
             elif index_diff == (-1, 0):
+                comp[(2 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
+            elif index_diff == (0, 1):
                 comp[(3 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
-            else:
-                print("Not considered complementary index case: ", index_diff)
+            # else:
+            #     print("Not considered complementary index case: ", index_diff)
         return comp
     
     def get_name(self):

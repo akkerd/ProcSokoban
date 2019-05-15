@@ -1,3 +1,4 @@
+import random
 from level_parser.template import Template
 from generator.generator import Generator
 from ai.ai_manager import initiate_ai_solution_search
@@ -35,7 +36,7 @@ for extension, prototemplate_list in prototemplates.items():
                 for j in range(0, int(t_width / 5)):
                     temp = {
                         'name': t_name,
-                        'lines': [t_lines[i][j * 5:(j + 1) * 5] for i in range(i * 5, (i + 1) * 5)],
+                        'lines': [t_lines[(i * 5) + x][j * 5:(j + 1) * 5] for x in range(0, 5)],
                         'index': (i, j)
                     }
                     prototemplates_to_keep.append(temp)
@@ -77,21 +78,38 @@ generator = Generator(
     doFlipping=True,
 )
 
-level = generator.get_level(size=[10, 10], ensureOuterWalls=False)
+level = generator.get_level(size=[5, 5], ensureOuterWalls=False)
 
 # AI
 # initiate_ai_solution_search(level)
 
-# Place player in level
-player_set = False
-for row in level.values():
-    if "a" in row and not player_set:
-        row[row.index("a")] = "0"
-        player_set = True
-    if "/" in row:
-        for i, char in enumerate(row):
-            if char == "/":
-                row[i] = " "
+# Track final level variables
+box_count = 0
+goals_tracker = []
+goals_count = 0
+for i, row in level.items():
+    for j, char in enumerate(row):
+        if char in "ABCDEFGHIJKLMNOPQRSTUVWYZ":
+            box_count += 1
+        elif char in "abcdefghijklmnopqrstuvwyz":
+            goals_tracker.append((i, j))
+            goals_count += 1
+        elif char == "/":
+            level[i][j] = " "
+
+# Place player 
+if goals_count - box_count > 0:
+    pos = goals_tracker.pop(random.randrange(0, len(goals_tracker)))
+    goals_count -= 1
+else:
+    print("Find a suitable place for the player without using goals")
+    raise Exception
+level[pos[0]][pos[1]] = "0"
+
+# Remove extra goals
+for i in range(0, goals_count - box_count):
+    pos = goals_tracker.pop(random.randrange(0, len(goals_tracker)))
+    level[pos[0]][pos[1]] = " "
 
 
 print("Final Iteration: ")

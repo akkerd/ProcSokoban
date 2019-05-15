@@ -104,16 +104,16 @@ class Generator:
         finished = False
         IterationCount = 0 
         while not finished:
-            chosen_one = grid.pick_next()
-            chosen_one.collapse_random()
+            chosen_one = grid.collapse_next()
             grid.reset_update()
             chosen_one.update()
 
-            # Check the all templates have collapsed or start all over again
+            # Check the critical path is closed between start and goals
             all_collapsed = True
             for i in range(0, size[0]):
                 for j in range(0, size[1]):
-                    if not grid.get_module(i, j).is_collapsed() and not grid.get_module(i, j).is_contradiction():
+                    module = grid.get_module(i, j)
+                    if not module.is_collapsed() and not module.is_contradiction():
                         all_collapsed = False
                     # if grid.is_contradiction(i, j):
                     #     # Contradiction found
@@ -146,8 +146,8 @@ class Generator:
         while start.get_index() not in [(0, 0), (0, int(start.get_cols() / 5)), (int(start.get_rows() / 5), 0), (int(start.get_rows() / 5), int(start.get_cols() / 5))]:
                 start = random.choice(Generator.starts)
 
-        grid_height = grid.Size[0] - 1
-        grid_width = grid.Size[1] - 1
+        grid_width = grid.Size[0] - 1
+        grid_height = grid.Size[1] - 1
         if start.get_index() == (0, 0):
             module = grid.set_start(start, (0, 0), Generator.starts)
         elif start.get_index() == (0, int(start.get_cols() / 5)):
@@ -174,7 +174,7 @@ class Generator:
             
             module_pos = module_prioque.get()
             stopped = False
-            while not grid.can_set_template(goal, module_pos[1]):
+            while not grid.can_set_templatec(goal, module_pos[1]):
                 if module_prioque.empty():
                     stopped = True
                     break
