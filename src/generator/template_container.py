@@ -79,7 +79,10 @@ class TemplateContainer:
         return comp
     
     def get_name(self):
-        return self._template.name
+        return self._template.Name
 
     def get_index(self):
         return self._index
+
+    def get_connections(self):
+        return self._template.ConnectionCount

@@ -13,11 +13,12 @@ class Utils:
     
     @staticmethod
     def ensureOuterWalls(grid):
+        expanded_level = {}
+        expanded_level[0] = ["+"] * (len(grid) + 2)
         for i in range(0, len(grid)):
-            if i is 0 or i is len(grid) - 1:
-                    grid[i] = ["+"] * (len(grid[i]) - 1)
-            else:
-                grid[i] = ["+"] + grid[i][1:len(grid[i]) - 2] + ["+"]
+            expanded_level[i + 1] = ["+"] + grid[i] + ["+"]
+        expanded_level[len(grid) + 1] = ["+"] * (len(grid) + 2)
+        return expanded_level
 
     @staticmethod
     def ensure_one_player(grid):

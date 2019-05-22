@@ -31,11 +31,11 @@ class Generator:
         for extension, prototemplate_list in prototemplates.items(): 
             template_list = []
             for prototemplate in prototemplate_list:
-                if prototemplate['complementary']:
+                if prototemplate.get('complementary'):
                     template_list.append(Template(name=prototemplate["name"], lines=prototemplate["lines"], \
                         index=prototemplate["index"], complementary=prototemplate['complementary']))
                 else:
-                    template_list.append(Template(name=prototemplate["name"], lines=prototemplate["lines"]), index=(0, 0))
+                    template_list.append(Template(name=prototemplate["name"], lines=prototemplate["lines"], index=(0, 0)))
             for template in template_list:
                 # Find complementary templates and add template references
                 if template.needs_complementary():
@@ -79,7 +79,7 @@ class Generator:
 
     def get_level(self, size=[2, 2], ensureOuterWalls=False, pattern=""):
         # Generate the grid
-        grid = Grid(size=size)
+        grid = Grid(size=size, generator=self)
 
         # Fill grid with Modules
         grid.reset_grid(self.rooms)
@@ -89,7 +89,7 @@ class Generator:
         # Starts, Goals and Special (if needed) 
         if pattern == "cathedral":
             # TODO: Insert dome, arcade and wing connections
-            x = 1
+            raise Exception
         else:
             # Default case, insert start (boxes) and (goals)
             # start_module = self.place_start(grid, random.sample(self.starts, 1)[0])
@@ -107,28 +107,40 @@ class Generator:
         #############################################################################
 
         ## NOTE: Iterate updating neighbours
-        finished = False
+        all_collapsed = False
         IterationCount = 0 
-        while not finished:
+        while True:
             chosen_one = grid.collapse_next()
-            grid.reset_update()
-            chosen_one.update()
-
-            # Check the critical path is closed between start and goals
-            all_collapsed = True
-            for i in range(0, size[0]):
-                for j in range(0, size[1]):
-                    module = grid.get_module(i, j)
-                    if not module.is_collapsed() and not module.is_contradiction():
-                        all_collapsed = False
-                    # if grid.is_contradiction(i, j):
-                    #     # Contradiction found
-                    #     all_collapsed = False
-                    #     print("Reseting grid...")
-                    #     grid.reset_grid(self.starts)
-                    #     break
+            if chosen_one is None:
+                # Contradiction found, can't find next module to collapse
+                all_collapsed = False
+                grid.Reseted = True
+                print("Reseting grid...")
+                grid.reset_grid(self.rooms)
+            else:
+                # Check that the critical path is closed between start and goals
+                if grid.is_critical_path():
+                    # Finished
+                    break
+                grid.reset_update()
+                chosen_one.update()
+                if grid.is_critical_path():
+                    # Finished
+                    break
+                all_collapsed = True
+                for i in range(0, size[0]):
+                    for j in range(0, size[1]):
+                        module = grid.get_module(i, j)
+                        if not module.is_collapsed() and not module.is_contradiction():
+                            all_collapsed = False
+                        # if grid.is_contradiction(i, j):
+                        #     # Contradiction found
+                        #     all_collapsed = False
+                        #     print("Reseting grid...")
+                        #     grid.reset_grid(self.starts)
+                        #     break
             if all_collapsed:
-                finished = True
+                break
             else: 
                 IterationCount += 1
                 print("Iteration #", IterationCount, ": ")
@@ -166,7 +178,6 @@ class Generator:
         return module
 
     def place_goal(self, grid):
-        start_pos = grid.Starts[0]
         goal_count = 0
         valid_goal = False
         while not valid_goal:
@@ -175,7 +186,7 @@ class Generator:
             for i in range(0, grid.Size[0]):
                 for j in range(0, grid.Size[1]):
                     # Manhattan distance
-                    dist = abs(start_pos[0] - i) + abs(start_pos[1] - j)
+                    dist = min(abs(start_pos[0] - i) + abs(start_pos[1] - j) for start_pos in grid.Start)
                     module_prioque.put((-dist, (i, j)))
             
             module_pos = module_prioque.get()

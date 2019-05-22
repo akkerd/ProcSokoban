@@ -13,12 +13,12 @@ prototemplates = IOUtils.read_templates()
 # Generation
 generator = Generator(
     prototemplates=prototemplates,
-    seed=127,
+    # seed=127,
     doRotation=rotation,
     doFlipping=flipping,
 )
 
-level = generator.get_level(size=[5, 5], ensureOuterWalls=False)
+level = generator.get_level(size=[5, 5], ensureOuterWalls=True)
 
 # Ensure same number of box & goals
 Utils.fit_box_goals(level)
