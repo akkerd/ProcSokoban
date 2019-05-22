@@ -92,14 +92,29 @@ class TemplateContainer:
         TemplateContainer.CheckedTemplates = []
     
     def connects_at(self, conn_list):
-        is_connection = [False] * len(conn_list)
+        is_connection = [False] * (len(conn_list))
         for i, conn in enumerate(conn_list):
             if self.needs_complementary():
                 is_connection[i] = self.connects_with(conn)
             else:
                 is_connection[i] = self._template.is_connection_at(conn)
 
-        return True
+        return all(is_connection)
+
+    def has_connections_at(self, conn_list, desired_conn):
+        """
+        Check if template has AT LEAST num_connections in 
+        the given directions contained in conn_list
+        """
+        is_connection = [False] * (len(conn_list))
+        for i, conn in enumerate(conn_list):
+            if self.needs_complementary():
+                is_connection[i] = self.connects_with(conn)
+            else:
+                is_connection[i] = self._template.is_connection_at(conn)
+        num_real_conn = sum(1 for x in is_connection if x is True)
+
+        return desired_conn >= num_real_conn
 
     def connects_with(self, conn):
         if self._template.is_connection_at(conn):
@@ -113,5 +128,6 @@ class TemplateContainer:
                 return True
         
         return False
+
 
      

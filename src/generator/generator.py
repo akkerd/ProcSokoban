@@ -177,11 +177,11 @@ class Generator:
             grid_height = grid.Size[1] - 1
             index = start.get_index()
             final_pos = (-1, -1)
-            if index == (0, 0) and start.connects_at([1, 2]):
+            if index == (0, 0) and start.has_connections_at([1, 2], 1):
                 final_pos = (0, 0)
-            elif index == (0, int(start.get_cols() / 5)) and start.connects_at([2, 3]):
+            elif index == (0, int(start.get_cols() / 5)) and start.has_connections_at([2, 3], 1):
                 final_pos = (0, grid_width)
-            elif index == (int(start.get_rows() / 5), 0) and start.connects_at([0, 1]):
+            elif index == (int(start.get_rows() / 5), 0) and start.has_connections_at([0, 1], 1):
                 final_pos = (grid_height, 0)
             elif index == (int(start.get_rows() / 5), int(start.get_cols() / 5)) and start.connects_at([0, 3]):
                 final_pos = (grid_height, grid_width)
@@ -193,12 +193,24 @@ class Generator:
 
             # If couldn't place this start, remove it from list and continue
             temp_starts.remove(start)
-            
+
             if len(temp_starts) == 0:
                 print("Can't place any of the given start tamplates in the grid!")
                 raise Exception
 
         return module
+
+    def get_possible_connections(self, mod_pos, grid):
+        connections = []
+        if grid.get_module(mod_pos[0] - 1, mod_pos[1]) is not None:
+            connections.append(0)
+        if grid.get_module(mod_pos[0], mod_pos[1] + 1) is not None:
+            connections.append(1)
+        if grid.get_module(mod_pos[0] + 1, mod_pos[1]) is not None:
+            connections.append(2)
+        if grid.get_module(mod_pos[0], mod_pos[1] - 1) is not None:
+            connections.append(3)
+        return connections
 
     def place_goal(self, grid):
         goal_count = 0
@@ -212,13 +224,15 @@ class Generator:
                     dist = min(abs(start_pos[0] - i) + abs(start_pos[1] - j) for start_pos in grid.Start)
                     module_prioque.put((-dist, (i, j)))
             
-            module_pos = module_prioque.get()
+            mod_pos = module_prioque.get()[1]
+            connections = self.get_possible_connections(mod_pos, grid)
+
             stopped = False
-            while not grid.can_set_templatec(goal, module_pos[1]):
+            while not grid.can_set_templatec(goal, mod_pos) or not goal.has_connections_at(connections, 1):
                 if module_prioque.empty():
                     stopped = True
                     break
-                module_pos = module_prioque.get()
+                mod_pos = module_prioque.get()[1]
             if not stopped:
                 # Found good goal template
                 valid_goal = True
@@ -228,4 +242,4 @@ class Generator:
                 if goal_count == len(self.goals):
                     raise Exception
 
-        return grid.set_goal(goal, (module_pos[1][0], module_pos[1][1]))
+        return grid.set_goal(goal, (mod_pos[0], mod_pos[1]))
