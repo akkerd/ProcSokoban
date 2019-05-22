@@ -9,12 +9,12 @@ class State(Enum):
     Contradiction = 3
 
 class Module:
-    def __init__(self, possibilities, position):
+    def __init__(self, possibilities, position, grid):
         '''
             possibilities: list of TemplateContainers [Object,Object]
             position: tuple [i,j]
         '''
-        self.Position = position
+        self.Position = tuple(position)
         self.PossibilitySpace = []
         self.state = State.Closed
         self.updated = False
@@ -22,13 +22,15 @@ class Module:
         self.complementary_collapse = False
         self.neighbours = {}
         self.complements = {}
+        self.grid = grid
+        self.Connections = []
 
         for template_container in possibilities:
             self.PossibilitySpace.append(template_container)
 
-    def collapse(self, poss):
+    def recursive_collapse(self, poss):
         # NOTE: This is the only function where the State can be
-        # is set to collapsed and the neighbours opened
+        # is set to collapsed
         if self.is_collapsed() and not self.complementary_collapse:
             # Overlapping between templates
             raise Exception
@@ -39,21 +41,35 @@ class Module:
         self.complementary_collapse = True
 
         # Collapse complementary modules
-        for neigh_i, complementary in poss.get_complementary().items():
-            if not self.neighbours.get(neigh_i):
-                raise Exception
-            else:
-                self.neighbours[neigh_i].collapse(complementary)
+        if poss.needs_complementary():
+            for neigh_i, complementary in poss.get_complementary().items():
+                if self.neighbours.get(neigh_i):
+                    # Allow neighbours to be None if other connections in template can connect
+                    # (checked in update if it connects somewhere) 
+                    self.neighbours[neigh_i].recursive_collapse(complementary)
 
         self.PossibilitySpace = [poss]
         self.state = State.Collapsed
 
+        if self.Position not in self.grid.CriticalPath:
+            self.grid.CheckedPositions = []
+            self.grid.expand_cpath(poss, self.Position)
+        
         # Open neighbours
         for i in range(0, 4):
             if self.neighbours.get(i):
                 if not (self.neighbours[i].is_collapsed() or self.neighbours[i].is_contradiction()):
                     self.neighbours[i].open()
 
+    def collapse(self, poss):
+        add_to_cgraph = True
+        if self.Position in self.grid.CriticalPath:
+            add_to_cgraph = False
+        
+        self.recursive_collapse(poss)
+        
+        if add_to_cgraph:
+            self.grid.add_to_cgraph(self)
 
     def collapse_random(self):
         if len(self.PossibilitySpace) is 0:
@@ -125,7 +141,7 @@ class Module:
                     # Allow connection if last available option connects with out-of-gri
                     connects = True
             if connects:
-                self.state = State.Collapsed
+                self.collapse()
             else:
                 # Run into contradiction because the last available option does not connect
                 print("Last available option does not connect!")
@@ -153,3 +169,35 @@ class Module:
 
     def open(self):
         self.state = State.Open
+
+    def get_final_name(self):
+        if not self.is_collapsed():
+            print("Module must be collapsed to get grid positions")
+            raise Exception
+        else:
+            name = self.PossibilitySpace[0].get_name()
+            if self.PossibilitySpace[0].needs_complementary():
+                self.grid.reset_check()
+                s_pos = self.get_final_grid_positions()
+            else:
+                s_pos = [tuple(self.Position)]
+            return name + str(s_pos)
+
+    def get_final_grid_positions(self):
+        if not self.is_collapsed():
+            print("Module must be collapsed to get grid positions")
+            raise Exception
+        if self.checked:
+            return []
+        
+        self.checked = True
+        positions = [self.Position]
+        for comp_i in self.PossibilitySpace[0].get_complementary().keys():
+            neigh_pos = self.grid.get_neighbour_pos(self.Position, comp_i)
+            neigh_mod = self.grid.get_module(neigh_pos[0], neigh_pos[1])
+            for pos in neigh_mod.get_final_grid_positions():
+                if pos not in positions:
+                    positions.append(pos)
+
+        positions.sort()
+        return positions

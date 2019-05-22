@@ -14,9 +14,12 @@ class IOUtils:
         # Print AI-MAS formatted level
         WriteStream = open(path_to_script_dir + "\levels\\" + file_name + ".lvl", "w+")
         for row in grid.values():
+            for i, char in enumerate(row):
+                if char == "?":
+                    row[i] = " "
             line = "".join(row)
             print("Row by row: ", line)
-            WriteStream.write(line+"\n")
+            WriteStream.write(line + "\n")
         WriteStream.close()
 
         # Print in standard level
@@ -35,7 +38,7 @@ class IOUtils:
         WriteStream = open(path_to_script_dir + "\levels\\" + file_name + ".txt", "w+")
         for row in grid.values():
             line = "".join(row)
-            WriteStream.write(line+"\n")
+            WriteStream.write(line + "\n")
         WriteStream.close()
 
     def read_templates(extension: str):

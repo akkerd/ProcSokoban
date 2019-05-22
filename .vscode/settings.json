@@ -41,4 +41,9 @@
 
     // Enable parameter hints
     "editor.parameterHints.enabled": true,
+    "search.exclude": {
+        "**/ai": true,
+        "**/bower_components": false,
+        "**/node_modules": false
+    },
 }
