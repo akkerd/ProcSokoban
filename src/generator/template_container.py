@@ -4,6 +4,7 @@ from generator.utils import Utils
 from level_parser.border import Border
 
 class TemplateContainer:
+    CheckedTemplates = []
 
     def __init__(self, template, rotation=0, flipped=False):
         self._template = template
@@ -86,3 +87,31 @@ class TemplateContainer:
 
     def get_connections(self):
         return self._template.ConnectionCount
+
+    def reset_check(self):
+        TemplateContainer.CheckedTemplates = []
+    
+    def connects_at(self, conn_list):
+        is_connection = [False] * len(conn_list)
+        for i, conn in enumerate(conn_list):
+            if self.needs_complementary():
+                is_connection[i] = self.connects_with(conn)
+            else:
+                is_connection[i] = self._template.is_connection_at(conn)
+
+        return True
+
+    def connects_with(self, conn):
+        if self._template.is_connection_at(conn):
+            return True
+        elif self.get_index() in TemplateContainer.CheckedTemplates:
+            return False
+        
+        TemplateContainer.CheckedTemplates.append(self.get_index())
+        for comp_i, comp in self.get_complementary().items():
+            if comp.connects_with(conn):
+                return True
+        
+        return False
+
+     

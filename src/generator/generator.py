@@ -160,21 +160,44 @@ class Generator:
         return outGrid
 
     def place_start(self, grid):
-        start = random.choice(self.starts)
-        while start.get_index() not in [(0, 0), (0, int(start.get_cols() / 5)), (int(start.get_rows() / 5), 0), (int(start.get_rows() / 5), int(start.get_cols() / 5))]:
-                start = random.choice(self.starts)
+        temp_starts = list(self.starts)
+        while True:
+            start = random.choice(temp_starts)
+            # Ensure that the picked module it's a corner module
+            while start.get_index() not in [(0, 0), 
+                                            (0, int(start.get_cols() / 5)), 
+                                            (int(start.get_rows() / 5), 0), 
+                                            (int(start.get_rows() / 5), 
+                                            int(start.get_cols() / 5))]:
+                temp_starts.remove(start)
+                start = random.choice(temp_starts)
 
-        grid_width = grid.Size[0] - 1
-        grid_height = grid.Size[1] - 1
-        if start.get_index() == (0, 0):
-            module = grid.set_start(start, (0, 0), self.starts)
-        elif start.get_index() == (0, int(start.get_cols() / 5)):
-            module = grid.set_start(start, (0, grid_width), self.starts)
-        elif start.get_index() == (int(start.get_rows() / 5), 0):
-            module = grid.set_start(start, (grid_height, 0), self.starts)
-        elif start.get_index() == (int(start.get_rows() / 5), int(start.get_cols() / 5)):
-            module = grid.set_start(start, (grid_height, grid_width), self.starts)
-        
+            # Place template in one of the corners of the grid
+            grid_width = grid.Size[0] - 1
+            grid_height = grid.Size[1] - 1
+            index = start.get_index()
+            final_pos = (-1, -1)
+            if index == (0, 0) and start.connects_at([1, 2]):
+                final_pos = (0, 0)
+            elif index == (0, int(start.get_cols() / 5)) and start.connects_at([2, 3]):
+                final_pos = (0, grid_width)
+            elif index == (int(start.get_rows() / 5), 0) and start.connects_at([0, 1]):
+                final_pos = (grid_height, 0)
+            elif index == (int(start.get_rows() / 5), int(start.get_cols() / 5)) and start.connects_at([0, 3]):
+                final_pos = (grid_height, grid_width)
+
+            if final_pos != (-1, -1):
+                # Search finished. Place start and break while
+                module = grid.set_start(start, final_pos)
+                break
+
+            # If couldn't place this start, remove it from list and continue
+            temp_starts.remove(start)
+            
+            if len(temp_starts) == 0:
+                print("Can't place any of the given start tamplates in the grid!")
+                raise Exception
+
         return module
 
     def place_goal(self, grid):

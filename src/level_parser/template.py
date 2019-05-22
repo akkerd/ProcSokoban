@@ -56,3 +56,6 @@ class Template:
         for comp in comp_list:
             temp_comp_list[comp.Index] = comp
         self.Complementary = temp_comp_list
+
+    def is_connection_at(self, dir):
+        return self.borders[dir].IsConnection

@@ -280,7 +280,7 @@ class Grid:
 
         return min_indexes
 
-    def set_start(self, start, pos: tuple, starts):
+    def set_start(self, start, pos: tuple):
         pos = tuple(pos)
         module = self.get_module(pos[0], pos[1])
         self.add_position_to_list(pos, start, self.Start)
