@@ -30,10 +30,10 @@ class Border:
             big = other
             small = self
 
-        for i in range(0, len(self.Connections)-len(other.Connections)+1):
+        for i in range(0, len(self.Connections) - len(other.Connections) + 1):
             match = 0
             for j, elem in enumerate(small.Connections):
-                if elem != big.Connections[i+j]:
+                if elem != big.Connections[i + j]:
                     match = 0
                     break
                 else:
@@ -41,17 +41,6 @@ class Border:
                     if match == len(small.Connections):
                         return True
         return False
-        
+
     def is_connection(self):
         return self.IsConnection
-        
-
-        # if self.MinimumConnection == other.MinimumConnection \
-        #     and self.MinimumConnection is not 0:
-        #     i = 0
-        #     for connection in self.Connections:
-        #         if connection != other.Connections[i]:
-        #             return False
-        #         i += 1
-        #     return True
-        # return False

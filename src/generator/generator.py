@@ -105,51 +105,46 @@ class Generator:
         #############################################################################
         ########################### Wave Function Collapse ##########################
         #############################################################################
-
-        ## NOTE: Iterate updating neighbours
         all_collapsed = False
         IterationCount = 0 
         while True:
-            chosen_one = grid.collapse_next()
-            if chosen_one is None:
-                # Contradiction found, can't find next module to collapse
-                all_collapsed = False
-                grid.Reseted = True
-                print("Reseting grid...")
-                grid.reset_grid(self.rooms)
-            else:
-                # Check that the critical path is closed between start and goals
-                if grid.is_critical_path():
-                    # Finished
-                    break
-                grid.reset_update()
-                chosen_one.update()
-                if grid.is_critical_path():
-                    # Finished
-                    break
-                all_collapsed = True
-                for i in range(0, size[0]):
-                    for j in range(0, size[1]):
-                        module = grid.get_module(i, j)
-                        if not module.is_collapsed() and not module.is_contradiction():
-                            all_collapsed = False
-                        # if grid.is_contradiction(i, j):
-                        #     # Contradiction found
-                        #     all_collapsed = False
-                        #     print("Reseting grid...")
-                        #     grid.reset_grid(self.starts)
-                        #     break
-            if all_collapsed:
+            # Check if the critical path is made
+            # between start and goals
+            if grid.is_critical_path():
+                # Finished
                 break
-            else: 
-                IterationCount += 1
-                print("Iteration #", IterationCount, ": ")
-                grid.print()
+            all_collapsed = True
+            
+            for i in range(0, size[0]):
+                for j in range(0, size[1]):
+                    module = grid.get_module(i, j)
+                    if not module.is_collapsed() and not module.is_contradiction():
+                        all_collapsed = False
+                    # if grid.is_contradiction(i, j):
+                    #     # Contradiction found
+                    #     all_collapsed = False
+                    #     print("Reseting grid...")
+                    #     grid.reset_grid(self.starts)
+                    #     break
+            if all_collapsed:
+                # All templates collapsed but no critical path
+                self.reset_grid(grid)
+            else:
+                chosen_one = grid.collapse_next()
+                if chosen_one is None:
+                    self.reset_grid(grid)
+                else:
+                    # NOTE: Iterate updating neighbours
+                    grid.reset_update()
+                    chosen_one.update()
+                    IterationCount += 1
+                    print("Iteration #", IterationCount, ": ")
+                    grid.print()
 
         #############################################################################
         ######################### Run AI to shuffle elements ########################
         #############################################################################
-        # TODO
+        # TODO:
 
         #############################################################################
         ############################ Final level creation ###########################
@@ -158,6 +153,13 @@ class Generator:
         outGrid = grid.get_full_level(ensureOuterWalls=ensureOuterWalls)
 
         return outGrid
+
+    def reset_grid(self, grid):
+        # Contradiction found
+        all_collapsed = False
+        grid.Reseted = True
+        print("Reseting grid...")
+        grid.reset_grid(self.rooms)
 
     def place_start(self, grid):
         temp_starts = list(self.starts)
@@ -183,7 +185,7 @@ class Generator:
                 final_pos = (0, grid_width)
             elif index == (int(start.get_rows() / 5), 0) and start.has_connections_at([0, 1], 1):
                 final_pos = (grid_height, 0)
-            elif index == (int(start.get_rows() / 5), int(start.get_cols() / 5)) and start.connects_at([0, 3]):
+            elif index == (int(start.get_rows() / 5), int(start.get_cols() / 5)) and start.has_connections_at([0, 3], 1):
                 final_pos = (grid_height, grid_width)
 
             if final_pos != (-1, -1):
@@ -199,18 +201,6 @@ class Generator:
                 raise Exception
 
         return module
-
-    def get_possible_connections(self, mod_pos, grid):
-        connections = []
-        if grid.get_module(mod_pos[0] - 1, mod_pos[1]) is not None:
-            connections.append(0)
-        if grid.get_module(mod_pos[0], mod_pos[1] + 1) is not None:
-            connections.append(1)
-        if grid.get_module(mod_pos[0] + 1, mod_pos[1]) is not None:
-            connections.append(2)
-        if grid.get_module(mod_pos[0], mod_pos[1] - 1) is not None:
-            connections.append(3)
-        return connections
 
     def place_goal(self, grid):
         goal_count = 0
@@ -243,3 +233,15 @@ class Generator:
                     raise Exception
 
         return grid.set_goal(goal, (mod_pos[0], mod_pos[1]))
+
+    def get_possible_connections(self, mod_pos, grid):
+        connections = []
+        if grid.get_module(mod_pos[0] - 1, mod_pos[1]) is not None:
+            connections.append(0)
+        if grid.get_module(mod_pos[0], mod_pos[1] + 1) is not None:
+            connections.append(1)
+        if grid.get_module(mod_pos[0] + 1, mod_pos[1]) is not None:
+            connections.append(2)
+        if grid.get_module(mod_pos[0], mod_pos[1] - 1) is not None:
+            connections.append(3)
+        return connections
