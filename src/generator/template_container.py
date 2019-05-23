@@ -31,6 +31,9 @@ class TemplateContainer:
     def rotate(self):
         self._rotation += 1      
 
+    def get_rotation(self):
+        return self._rotation
+
     def set_rotation(self, rotation):
         self._rotation = rotation % 4
 
@@ -62,21 +65,25 @@ class TemplateContainer:
     def needs_complementary(self):
         return self._complementary is not None
 
-    def get_complementary(self):
+    def get_complementary(self, rotate=True):
         comp = {}
         for comp_index, comp_template in self._complementary.items():
             index_diff = tuple(x - y for x, y in zip(self._index, comp_index))
-            # rotated_comp_index = (comp_index[0] + self._rotation % 4, comp_index[1] + self._rotation % 4)
+            final_index = -1
             if index_diff == (1, 0):
-                comp[(0 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
+                final_index = 0
             elif index_diff == (0, -1):
-                comp[(1 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
+                final_index = 1
             elif index_diff == (-1, 0):
-                comp[(2 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
+                final_index = 2
             elif index_diff == (0, 1):
-                comp[(3 + self._rotation) % 4] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
-            # else:
-            #     print("Not considered complementary index case: ", index_diff)
+                final_index = 3
+
+            if final_index != -1:
+                # Rotate if needed
+                final_index = (final_index + self._rotation) % 4 if rotate else final_index
+                # Assign
+                comp[final_index] = TemplateContainer(template=comp_template, rotation=self._rotation, flipped=self._flipped)
         return comp
     
     def get_name(self):
@@ -108,10 +115,11 @@ class TemplateContainer:
         """
         is_connection = [False] * (len(conn_list))
         for i, conn in enumerate(conn_list):
+            rotated_conn = (conn + self._rotation) % 4
             if self.needs_complementary():
-                is_connection[i] = self.connects_with(conn)
+                is_connection[i] = self.connects_with(rotated_conn)
             else:
-                is_connection[i] = self._template.is_connection_at(conn)
+                is_connection[i] = self._template.is_connection_at(rotated_conn)
         num_real_conn = sum(1 for x in is_connection if x is True)
 
         return desired_conn >= num_real_conn
@@ -123,7 +131,7 @@ class TemplateContainer:
             return False
         
         TemplateContainer.CheckedTemplates.append(self.get_index())
-        for comp_i, comp in self.get_complementary().items():
+        for comp_i, comp in self.get_complementary(rotate=False).items():
             if comp.connects_with(conn):
                 return True
         

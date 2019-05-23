@@ -215,6 +215,26 @@ class Grid:
                     return False
             module.checked = True
             for neigh_i, complementary in template.get_complementary().items():        
+                if not self.recursive_can_set_templatec(complementary, module.neighbours[neigh_i].Position):
+                    return False
+        else:
+            module.checked = True
+
+        return True
+    
+    def recursive_can_set_templatec(self, template, pos: tuple):
+        module = self.get_module(pos[0], pos[1])
+        if module.checked:
+            # Avoid checking modules more than once
+            return True
+        if module.is_collapsed():
+            return False
+        if template.needs_complementary():
+            for neigh_i, complementary in template.get_complementary(rotate=False).items():
+                if not module.neighbours.get(neigh_i):
+                    return False
+            module.checked = True
+            for neigh_i, complementary in template.get_complementary(rotate=False).items():        
                 if not self.can_set_templatec(complementary, module.neighbours[neigh_i].Position):
                     return False
         else:
