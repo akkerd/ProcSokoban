@@ -17,7 +17,7 @@ prototemplates = IOUtils.read_templates()
 # Generation
 generator = Generator(
     prototemplates=prototemplates,
-    # seed=128,
+    seed=128,
     doRotation=rotation,
     doFlipping=flipping,
 )
@@ -37,3 +37,4 @@ print("Final Iteration: ")
 IOUtils.print_and_write_grid(level, "Test") 
 
 print("Running time: ", elapsed_time)
+print("Seed was: ", generator.seed)

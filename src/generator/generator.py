@@ -69,7 +69,13 @@ class Generator:
                     self.goals.append(temp_goal)
 
         if seed is not None:
+            self.seed = seed
             random.seed(seed)
+        else:
+            seed = random.randrange(sys.maxsize)
+            rng = random.Random(seed)
+            self.seed = seed
+        print("Seed was:", seed)
 
     def get_level(self, size=[2, 2], ensureOuterWalls=False, pattern=""):
         # Generate the grid
@@ -114,6 +120,9 @@ class Generator:
                     module = grid.get_module(i, j)
                     if not module.is_collapsed() and not module.is_contradiction():
                         all_collapsed = False
+                        break
+                if not all_collapsed:
+                    break
                     # if grid.is_contradiction(i, j):
                     #     # Contradiction found
                     #     all_collapsed = False
