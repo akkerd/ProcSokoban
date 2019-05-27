@@ -330,6 +330,16 @@ class Grid:
                 comp_pos = self.get_neighbour_pos(mod_pos, comp_i)
                 self.add_position_to_list(comp_pos, comp, p_list)
 
+    # def recursive_add_position_to_list(self, mod_pos: tuple, templatec, p_list):
+    #     if mod_pos in p_list:
+    #         return True
+
+    #     p_list.append(mod_pos)
+    #     if templatec.needs_complementary():
+    #         for comp_i, comp in templatec.get_complementary(rotate=False).items():
+    #             comp_pos = self.get_neighbour_pos(mod_pos, comp_i)
+    #             self.recursive_add_position_to_list(comp_pos, comp, p_list)
+
     def templatec_expands_cpath(self, templatec, pos: tuple):
         """
         Fast version for checking if the given template expands the critical path.

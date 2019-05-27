@@ -51,28 +51,22 @@ class Generator:
 
         # Do rotations if neccessary
         if doRotation:
-            for rot in range(0, 4):
-                for start in tuple(self.starts):
-                    start.set_rotation(rot)
-                    self.starts.append(start)
-                for room in tuple(self.rooms):
-                    room.set_rotation(rot)
-                    self.rooms.append(room)
-                for goal in tuple(self.goals):
-                    goal.set_rotation(rot)
-                    self.goals.append(goal)
-        
-        # Do flip if neccessary
-        if doFlipping:
             for start in tuple(self.starts):
-                start.flip()
-                self.starts.append(start)
+                for rot in range(1, 4):
+                    # Shallow copy to save some memory
+                    temp_start = copy.copy(start) 
+                    temp_start.set_rotation(rot)
+                    self.starts.append(temp_start)
             for room in tuple(self.rooms):
-                room.flip()
-                self.rooms.append(room)
+                for rot in range(1, 4):
+                    temp_room = copy.copy(room)
+                    temp_room.set_rotation(rot)
+                    self.rooms.append(temp_room)
             for goal in tuple(self.goals):
-                goal.flip()
-                self.goals.append(goal)
+                for rot in range(1, 4):
+                    temp_goal = copy.copy(goal)
+                    temp_goal.set_rotation(rot)
+                    self.goals.append(temp_goal)
 
         if seed is not None:
             random.seed(seed)
@@ -174,19 +168,21 @@ class Generator:
                 temp_starts.remove(start)
                 start = random.choice(temp_starts)
 
-            # Place template in one of the corners of the grid
+            # Place template in the corners of the grid
             grid_width = grid.Size[0] - 1
             grid_height = grid.Size[1] - 1
-            index = start.get_index()
             final_pos = (-1, -1)
-            if index == (0, 0) and start.has_connections_at([1, 2], 1):
-                final_pos = (0, 0)
-            elif index == (0, int(start.get_cols() / 5)) and start.has_connections_at([2, 3], 1):
-                final_pos = (0, grid_width)
-            elif index == (int(start.get_rows() / 5), 0) and start.has_connections_at([0, 1], 1):
-                final_pos = (grid_height, 0)
-            elif index == (int(start.get_rows() / 5), int(start.get_cols() / 5)) and start.has_connections_at([0, 3], 1):
-                final_pos = (grid_height, grid_width)
+
+            index = start.get_rotated_corner()
+            if index is not None:
+                if start.fit_in_corner(0, index):
+                    final_pos = (0, 0)
+                elif start.fit_in_corner(1, index):
+                    final_pos = (0, grid_width)
+                elif start.fit_in_corner(2, index):
+                    final_pos = (grid_height, 0)
+                elif start.fit_in_corner(3, index):
+                    final_pos = (grid_height, grid_width)
 
             if final_pos != (-1, -1):
                 # Search finished. Place start and break while
@@ -206,14 +202,15 @@ class Generator:
         goal_count = 0
         valid_goal = False
         while not valid_goal:
-            goal = random.choice(self.goals)
+            temp_goals = copy.copy(self.goals)
+            goal = random.choice(temp_goals)
             module_prioque = prioque()
             for i in range(0, grid.Size[0]):
                 for j in range(0, grid.Size[1]):
                     # Manhattan distance
                     dist = min(abs(start_pos[0] - i) + abs(start_pos[1] - j) for start_pos in grid.Start)
                     module_prioque.put((-dist, (i, j)))
-            
+
             mod_pos = module_prioque.get()[1]
             connections = self.get_possible_connections(mod_pos, grid)
 
@@ -231,6 +228,9 @@ class Generator:
                 goal_count += 1
                 if goal_count == len(self.goals):
                     raise Exception
+                temp_goals.remove(goal)
+                goal = random.choice(temp_goals)
+
 
         return grid.set_goal(goal, (mod_pos[0], mod_pos[1]))
 

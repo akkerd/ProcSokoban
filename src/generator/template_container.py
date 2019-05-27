@@ -12,6 +12,7 @@ class TemplateContainer:
         self._flipped = flipped
         self._index = template.Index
         self._complementary = template.Complementary
+        self.corners = [(0, 0), (0, int(self._template.Ncols / 5)), (int(self._template.Nrows / 5), int(self._template.Ncols / 5)), (int(self._template.Nrows / 5), 0)]
 
     def __hash__(self):
         lvl = self.get_level()
@@ -91,6 +92,27 @@ class TemplateContainer:
 
     def get_index(self):
         return self._index
+
+    def fit_in_corner(self, corner, index):
+        fits = False
+        i = self.corners.index(index)
+        if i == corner:
+            if i == 0 and self.has_connections_at([1, 2], 1):
+                fits = True
+            elif i == 1 and self.has_connections_at([2, 3], 1):
+                fits = True
+            elif i == 2 and self.has_connections_at([0, 1], 1):
+                fits = True
+            elif i == 3 and self.has_connections_at([0, 3], 1):
+                fits = True
+        return fits
+
+    def get_rotated_corner(self):
+        rotated_index = None
+        if self._index in self.corners:
+            i = self.corners.index(self._index)
+            rotated_index = self.corners[(i + self._rotation) % 4]
+        return rotated_index
 
     def get_connections(self):
         return self._template.ConnectionCount
