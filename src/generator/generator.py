@@ -199,38 +199,33 @@ class Generator:
         return module
 
     def place_goal(self, grid):
-        goal_count = 0
-        valid_goal = False
-        while not valid_goal:
-            temp_goals = copy.copy(self.goals)
-            goal = random.choice(temp_goals)
-            module_prioque = prioque()
-            for i in range(0, grid.Size[0]):
-                for j in range(0, grid.Size[1]):
-                    # Manhattan distance
-                    dist = min(abs(start_pos[0] - i) + abs(start_pos[1] - j) for start_pos in grid.Start)
-                    module_prioque.put((-dist, (i, j)))
+        # Calculate minimum distance positions and put them in priority queue
+        module_prioque = prioque()
+        for i in range(0, grid.Size[0]):
+            for j in range(0, grid.Size[1]):
+                # Manhattan distance
+                dist = min(abs(start_pos[0] - i) + abs(start_pos[1] - j) for start_pos in grid.Start)
+                module_prioque.put((-dist, (i, j)))
 
+        while True:
             mod_pos = module_prioque.get()[1]
             connections = self.get_possible_connections(mod_pos, grid)
-
-            stopped = False
+            temp_goals = copy.copy(self.goals)
+            goal = random.choice(temp_goals)
             while not grid.can_set_templatec(goal, mod_pos) or not goal.has_connections_at(connections, 1):
-                if module_prioque.empty():
-                    stopped = True
-                    break
-                mod_pos = module_prioque.get()[1]
-            if not stopped:
-                # Found good goal template
-                valid_goal = True
-            else:
                 # Timeout if all goals checked
-                goal_count += 1
-                if goal_count == len(self.goals):
-                    raise Exception
+                if len(temp_goals) == 0:
+                    if module_prioque.empty():
+                        # Can't place the goal anywhere
+                        raise Exception
+                    # Try with next position
+                    mod_pos = module_prioque.get()[1]
+                    connections = self.get_possible_connections(mod_pos, grid)
+                    temp_goals = copy.copy(self.goals)
                 temp_goals.remove(goal)
                 goal = random.choice(temp_goals)
-
+            # Goal found
+            break
 
         return grid.set_goal(goal, (mod_pos[0], mod_pos[1]))
 
