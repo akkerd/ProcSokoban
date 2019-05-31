@@ -84,10 +84,13 @@ class Grid:
             for j in range(0, self.Size[1]):
                 self.get_module(i, j).updated = False
     
-    def reset_check(self):
+    def reset_checked_modules(self):
         for i in range(0, self.Size[0]):
             for j in range(0, self.Size[1]):
                 self.get_module(i, j).checked = False
+
+    def reset_checked_positions(self):
+        self.CheckedPositions = []
 
     def get_module(self, i, j):
         if i < 0 or j < 0 or i > self.Size[0] - 1 or j > self.Size[1] - 1:
@@ -178,10 +181,8 @@ class Grid:
             template_candidates = self.get_max_conn_templates(module_candidate)
 
         templatec = random.choice(template_candidates)
-        self.CheckedPositions = []
-        self.reset_check()
         contradiction = False
-        while not self.can_set_templatec(templatec, module_candidate.Position) or not self.templatec_expands_cpath(templatec, module_candidate.Position):
+        while not self.can_set_templatec(templatec, module_candidate.Position) or not self.is_cpath_expanded(templatec, module_candidate.Position):
             template_candidates.remove(templatec)
             if len(template_candidates) == 0:
                 open_list.remove(module_candidate)
@@ -195,7 +196,6 @@ class Grid:
 
             templatec = random.choice(template_candidates)
             self.CheckedPositions = []
-            self.reset_check()
 
         if contradiction:
             return None
@@ -204,9 +204,8 @@ class Grid:
 
     def can_set_templatec(self, template, pos: tuple):
         module = self.get_module(pos[0], pos[1])
-        if module.checked:
-            # Avoid checking modules more than once
-            return True
+        self.reset_checked_modules()
+
         if module.is_collapsed():
             return False
         if template.needs_complementary():
@@ -235,7 +234,7 @@ class Grid:
                     return False
             module.checked = True
             for neigh_i, complementary in template.get_complementary(rotate=False).items():        
-                if not self.can_set_templatec(complementary, module.neighbours[neigh_i].Position):
+                if not self.recursive_can_set_templatec(complementary, module.neighbours[neigh_i].Position):
                     return False
         else:
             module.checked = True
@@ -340,11 +339,15 @@ class Grid:
     #             comp_pos = self.get_neighbour_pos(mod_pos, comp_i)
     #             self.recursive_add_position_to_list(comp_pos, comp, p_list)
 
-    def templatec_expands_cpath(self, templatec, pos: tuple):
+    def is_cpath_expanded(self, templatec, pos: tuple):
         """
         Fast version for checking if the given template expands the critical path.
         If any template from the complementary list expands it, break and return True
         """
+        self.reset_checked_positions()
+        return self.recursive_is_cpath_expanded(templatec, pos)
+
+    def recursive_is_cpath_expanded(self, templatec, pos: tuple):
         if not self.get_module(pos[0], pos[1]):
             # Null check
             return False
@@ -353,10 +356,10 @@ class Grid:
         for i in range(0, 4):
             neigh_pos = self.get_neighbour_pos(pos, i)
             if neigh_pos in self.CriticalPath:
-            # Template connection points towards the Critical Path
+                # Template connection points towards the Critical Path
                 neigh_mod = self.get_module(neigh_pos[0], neigh_pos[1])
                 if templatec.get_border(i) == neigh_mod.PossibilitySpace[0].get_border((i + 2) % 4):
-                # and Critical Path's corresponding module connects with this template
+                    # and Critical Path's corresponding module connects with this template
                     expands_cpath = True
                     break
 
@@ -368,7 +371,7 @@ class Grid:
                 comp_pos = self.get_neighbour_pos(pos, comp_i)
                 if comp_pos not in self.CheckedPositions:
                 # Avoid checking complementary templates twice
-                    if self.templatec_expands_cpath(comp, comp_pos):
+                    if self.recursive_is_cpath_expanded(comp, comp_pos):
                     # Recursive call to this function check if it expands the cpath
                         expands_cpath = True
                         # If one of the templates expands the cpath, that is enough
@@ -377,6 +380,13 @@ class Grid:
         return expands_cpath
 
     def expand_cpath(self, templatec, pos: tuple):
+        """
+        Explore template and complementaries while expanding the critical path along the way
+        """
+        self.reset_checked_positions()
+        return self.recursive_expand_cpath(templatec, pos)
+    
+    def recursive_expand_cpath(self, templatec, pos: tuple):
         """
         Explore template and complementaries while expanding the critical path along the way
         """
@@ -403,7 +413,7 @@ class Grid:
             for comp_i, comp in templatec.get_complementary().items():
                 comp_pos = self.get_neighbour_pos(pos, comp_i)
                 # Recursive call to this function to expand the cpath
-                self.expand_cpath(comp, comp_pos)                        
+                self.recursive_expand_cpath(comp, comp_pos)                        
         return True
 
     def add_to_cpath(self, pos: tuple):

@@ -1,4 +1,5 @@
 import random
+import sys
 import copy
 from level_parser.template import Template
 from generator.template_container import TemplateContainer
@@ -189,9 +190,9 @@ class Generator:
                 elif start.fit_in_corner(1, index):
                     final_pos = (0, grid_width)
                 elif start.fit_in_corner(2, index):
-                    final_pos = (grid_height, 0)
-                elif start.fit_in_corner(3, index):
                     final_pos = (grid_height, grid_width)
+                elif start.fit_in_corner(3, index):
+                    final_pos = (grid_height, 0)
 
             if final_pos != (-1, -1):
                 # Search finished. Place start and break while

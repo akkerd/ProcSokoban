@@ -22,7 +22,7 @@ class TemplateContainer:
         return hash(temp)
 
     def get_border(self, index):
-        rot_idx = (index + self._rotation) % 4
+        rot_idx = (index - self._rotation) % 4
         border = self._template.borders[rot_idx]
         if (index <= 1 and rot_idx >= 2) or (index >= 2 and rot_idx <= 1):
             border = copy.deepcopy(border)
@@ -135,6 +135,7 @@ class TemplateContainer:
         Check if template has AT LEAST num_connections in 
         the given directions contained in conn_list
         """
+        self.reset_check()
         is_connection = [False] * (len(conn_list))
         for i, conn in enumerate(conn_list):
             rotated_conn = (conn + self._rotation) % 4
