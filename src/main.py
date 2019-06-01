@@ -1,10 +1,14 @@
+import time
 from generator.generator import Generator
 from generator.utils import Utils
 from ai.ai_manager import initiate_ai_solution_search
 from inout.utils import IOUtils
 
+# Measuring and logs
+start_time = time.time()
+
 # Algorithm Parameters:
-rotation = False
+rotation = True
 flipping = False
 
 # Read all the 4 rotated versions of each of the key-templates and wildcards
@@ -13,7 +17,7 @@ prototemplates = IOUtils.read_templates()
 # Generation
 generator = Generator(
     prototemplates=prototemplates,
-    # seed=127,
+    # seed=1103366188522417049,
     doRotation=rotation,
     doFlipping=flipping,
 )
@@ -26,5 +30,11 @@ Utils.fit_box_goals(level)
 # AI
 # initiate_ai_solution_search(level)
 
+end_time = time.time()
+elapsed_time = end_time - start_time
+
 print("Final Iteration: ")
 IOUtils.print_and_write_grid(level, "Test") 
+
+print("Running time: ", elapsed_time)
+print("Seed was: ", generator.seed)

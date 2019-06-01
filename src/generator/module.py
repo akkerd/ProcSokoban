@@ -52,7 +52,6 @@ class Module:
         self.state = State.Collapsed
 
         if self.Position not in self.grid.CriticalPath:
-            self.grid.CheckedPositions = []
             self.grid.expand_cpath(poss, self.Position)
         
         # Open neighbours
@@ -177,7 +176,7 @@ class Module:
         else:
             name = self.PossibilitySpace[0].get_name()
             if self.PossibilitySpace[0].needs_complementary():
-                self.grid.reset_check()
+                self.grid.reset_checked_modules()
                 s_pos = self.get_final_grid_positions()
             else:
                 s_pos = [tuple(self.Position)]
@@ -195,9 +194,10 @@ class Module:
         for comp_i in self.PossibilitySpace[0].get_complementary().keys():
             neigh_pos = self.grid.get_neighbour_pos(self.Position, comp_i)
             neigh_mod = self.grid.get_module(neigh_pos[0], neigh_pos[1])
-            for pos in neigh_mod.get_final_grid_positions():
-                if pos not in positions:
-                    positions.append(pos)
+            if neigh_mod is not None:
+                for pos in neigh_mod.get_final_grid_positions():
+                    if pos not in positions:
+                        positions.append(pos)
 
         positions.sort()
         return positions

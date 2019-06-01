@@ -1,4 +1,5 @@
 import random
+import sys
 import copy
 from level_parser.template import Template
 from generator.template_container import TemplateContainer
@@ -51,31 +52,31 @@ class Generator:
 
         # Do rotations if neccessary
         if doRotation:
-            for rot in range(0, 4):
-                for start in tuple(self.starts):
-                    start.set_rotation(rot)
-                    self.starts.append(start)
-                for room in tuple(self.rooms):
-                    room.set_rotation(rot)
-                    self.rooms.append(room)
-                for goal in tuple(self.goals):
-                    goal.set_rotation(rot)
-                    self.goals.append(goal)
-        
-        # Do flip if neccessary
-        if doFlipping:
             for start in tuple(self.starts):
-                start.flip()
-                self.starts.append(start)
+                for rot in range(1, 4):
+                    # Shallow copy to save some memory
+                    temp_start = copy.copy(start) 
+                    temp_start.set_rotation(rot)
+                    self.starts.append(temp_start)
             for room in tuple(self.rooms):
-                room.flip()
-                self.rooms.append(room)
+                for rot in range(1, 4):
+                    temp_room = copy.copy(room)
+                    temp_room.set_rotation(rot)
+                    self.rooms.append(temp_room)
             for goal in tuple(self.goals):
-                goal.flip()
-                self.goals.append(goal)
+                for rot in range(1, 4):
+                    temp_goal = copy.copy(goal)
+                    temp_goal.set_rotation(rot)
+                    self.goals.append(temp_goal)
 
         if seed is not None:
+            self.seed = seed
             random.seed(seed)
+        else:
+            seed = random.randrange(sys.maxsize)
+            rng = random.Random(seed)
+            self.seed = seed
+        print("Seed was:", seed)
 
     def get_level(self, size=[2, 2], ensureOuterWalls=False, pattern=""):
         # Generate the grid
@@ -101,55 +102,55 @@ class Generator:
             goal_module = self.place_goal(grid)
             grid.reset_update()
             goal_module.update()
+            print("Initial setting:")
+            grid.print()
 
         #############################################################################
         ########################### Wave Function Collapse ##########################
         #############################################################################
-
-        ## NOTE: Iterate updating neighbours
         all_collapsed = False
         IterationCount = 0 
         while True:
-            chosen_one = grid.collapse_next()
-            if chosen_one is None:
-                # Contradiction found, can't find next module to collapse
-                all_collapsed = False
-                grid.Reseted = True
-                print("Reseting grid...")
-                grid.reset_grid(self.rooms)
-            else:
-                # Check that the critical path is closed between start and goals
-                if grid.is_critical_path():
-                    # Finished
-                    break
-                grid.reset_update()
-                chosen_one.update()
-                if grid.is_critical_path():
-                    # Finished
-                    break
-                all_collapsed = True
-                for i in range(0, size[0]):
-                    for j in range(0, size[1]):
-                        module = grid.get_module(i, j)
-                        if not module.is_collapsed() and not module.is_contradiction():
-                            all_collapsed = False
-                        # if grid.is_contradiction(i, j):
-                        #     # Contradiction found
-                        #     all_collapsed = False
-                        #     print("Reseting grid...")
-                        #     grid.reset_grid(self.starts)
-                        #     break
-            if all_collapsed:
+            # Check if the critical path is made
+            # between start and goals
+            if grid.is_critical_path():
+                # Finished
                 break
-            else: 
-                IterationCount += 1
-                print("Iteration #", IterationCount, ": ")
-                grid.print()
+            all_collapsed = True
+            
+            for i in range(0, size[0]):
+                for j in range(0, size[1]):
+                    module = grid.get_module(i, j)
+                    if not module.is_collapsed() and not module.is_contradiction():
+                        all_collapsed = False
+                        break
+                if not all_collapsed:
+                    break
+                    # if grid.is_contradiction(i, j):
+                    #     # Contradiction found
+                    #     all_collapsed = False
+                    #     print("Reseting grid...")
+                    #     grid.reset_grid(self.starts)
+                    #     break
+            if all_collapsed:
+                # All templates collapsed but no critical path
+                self.reset_grid(grid)
+            else:
+                chosen_one = grid.collapse_next()
+                if chosen_one is None:
+                    self.reset_grid(grid)
+                else:
+                    # NOTE: Iterate updating neighbours
+                    grid.reset_update()
+                    chosen_one.update()
+                    IterationCount += 1
+                    print("Iteration #", IterationCount, ": ")
+                    grid.print()
 
         #############################################################################
         ######################### Run AI to shuffle elements ########################
         #############################################################################
-        # TODO
+        # TODO:
 
         #############################################################################
         ############################ Final level creation ###########################
@@ -159,50 +160,95 @@ class Generator:
 
         return outGrid
 
-    def place_start(self, grid):
-        start = random.choice(self.starts)
-        while start.get_index() not in [(0, 0), (0, int(start.get_cols() / 5)), (int(start.get_rows() / 5), 0), (int(start.get_rows() / 5), int(start.get_cols() / 5))]:
-                start = random.choice(self.starts)
+    def reset_grid(self, grid):
+        # Contradiction found
+        all_collapsed = False
+        grid.Reseted = True
+        print("Reseting grid...")
+        grid.reset_grid(self.rooms)
 
-        grid_width = grid.Size[0] - 1
-        grid_height = grid.Size[1] - 1
-        if start.get_index() == (0, 0):
-            module = grid.set_start(start, (0, 0), self.starts)
-        elif start.get_index() == (0, int(start.get_cols() / 5)):
-            module = grid.set_start(start, (0, grid_width), self.starts)
-        elif start.get_index() == (int(start.get_rows() / 5), 0):
-            module = grid.set_start(start, (grid_height, 0), self.starts)
-        elif start.get_index() == (int(start.get_rows() / 5), int(start.get_cols() / 5)):
-            module = grid.set_start(start, (grid_height, grid_width), self.starts)
-        
+    def place_start(self, grid):
+        temp_starts = list(self.starts)
+        while True:
+            start = random.choice(temp_starts)
+            # Ensure that the picked module it's a corner module
+            while start.get_index() not in [(0, 0), 
+                                            (0, int(start.get_cols() / 5)), 
+                                            (int(start.get_rows() / 5), 0), 
+                                            (int(start.get_rows() / 5), 
+                                            int(start.get_cols() / 5))]:
+                temp_starts.remove(start)
+                start = random.choice(temp_starts)
+
+            # Place template in the corners of the grid
+            grid_width = grid.Size[0] - 1
+            grid_height = grid.Size[1] - 1
+            final_pos = (-1, -1)
+
+            index = start.get_rotated_corner()
+            if index is not None:
+                if start.fit_in_corner(0, index):
+                    final_pos = (0, 0)
+                elif start.fit_in_corner(1, index):
+                    final_pos = (0, grid_width)
+                elif start.fit_in_corner(2, index):
+                    final_pos = (grid_height, grid_width)
+                elif start.fit_in_corner(3, index):
+                    final_pos = (grid_height, 0)
+
+            if final_pos != (-1, -1):
+                # Search finished. Place start and break while
+                module = grid.set_start(start, final_pos)
+                break
+
+            # If couldn't place this start, remove it from list and continue
+            temp_starts.remove(start)
+
+            if len(temp_starts) == 0:
+                print("Can't place any of the given start tamplates in the grid!")
+                raise Exception
+
         return module
 
     def place_goal(self, grid):
-        goal_count = 0
-        valid_goal = False
-        while not valid_goal:
-            goal = random.choice(self.goals)
-            module_prioque = prioque()
-            for i in range(0, grid.Size[0]):
-                for j in range(0, grid.Size[1]):
-                    # Manhattan distance
-                    dist = min(abs(start_pos[0] - i) + abs(start_pos[1] - j) for start_pos in grid.Start)
-                    module_prioque.put((-dist, (i, j)))
-            
-            module_pos = module_prioque.get()
-            stopped = False
-            while not grid.can_set_templatec(goal, module_pos[1]):
-                if module_prioque.empty():
-                    stopped = True
-                    break
-                module_pos = module_prioque.get()
-            if not stopped:
-                # Found good goal template
-                valid_goal = True
-            else:
-                # Timeout if all goals checked
-                goal_count += 1
-                if goal_count == len(self.goals):
-                    raise Exception
+        # Calculate minimum distance positions and put them in priority queue
+        module_prioque = prioque()
+        for i in range(0, grid.Size[0]):
+            for j in range(0, grid.Size[1]):
+                # Manhattan distance
+                dist = min(abs(start_pos[0] - i) + abs(start_pos[1] - j) for start_pos in grid.Start)
+                module_prioque.put((-dist, (i, j)))
 
-        return grid.set_goal(goal, (module_pos[1][0], module_pos[1][1]))
+        while True:
+            mod_pos = module_prioque.get()[1]
+            connections = self.get_possible_connections(mod_pos, grid)
+            temp_goals = copy.copy(self.goals)
+            goal = random.choice(temp_goals)
+            while not grid.can_set_templatec(goal, mod_pos) or not goal.has_connections_at(connections, 1):
+                # Timeout if all goals checked
+                if len(temp_goals) == 0:
+                    if module_prioque.empty():
+                        # Can't place the goal anywhere
+                        raise Exception
+                    # Try with next position
+                    mod_pos = module_prioque.get()[1]
+                    connections = self.get_possible_connections(mod_pos, grid)
+                    temp_goals = copy.copy(self.goals)
+                temp_goals.remove(goal)
+                goal = random.choice(temp_goals)
+            # Goal found
+            break
+
+        return grid.set_goal(goal, (mod_pos[0], mod_pos[1]))
+
+    def get_possible_connections(self, mod_pos, grid):
+        connections = []
+        if grid.get_module(mod_pos[0] - 1, mod_pos[1]) is not None:
+            connections.append(0)
+        if grid.get_module(mod_pos[0], mod_pos[1] + 1) is not None:
+            connections.append(1)
+        if grid.get_module(mod_pos[0] + 1, mod_pos[1]) is not None:
+            connections.append(2)
+        if grid.get_module(mod_pos[0], mod_pos[1] - 1) is not None:
+            connections.append(3)
+        return connections

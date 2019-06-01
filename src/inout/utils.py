@@ -112,7 +112,7 @@ class IOUtils:
                 # Adapt templates to have fixed 5x5 size, or multiples of that (5x10, 15x10...)
                 width = math.ceil(longest_line / 5) * 5
                 height = math.ceil(len(lines) / 5) * 5
-                print("Template width: " + str(width) + " and height: " + str(height))
+                # print("Template width: " + str(width) + " and height: " + str(height))
                 
                 if height % 5 != 0 or width % 5 != 0:
                     # Check that sizes are multiple of 5
