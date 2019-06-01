@@ -102,6 +102,8 @@ class Generator:
             goal_module = self.place_goal(grid)
             grid.reset_update()
             goal_module.update()
+            print("Initial setting:")
+            grid.print()
 
         #############################################################################
         ########################### Wave Function Collapse ##########################

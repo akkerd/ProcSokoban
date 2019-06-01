@@ -138,14 +138,15 @@ class TemplateContainer:
         self.reset_check()
         is_connection = [False] * (len(conn_list))
         for i, conn in enumerate(conn_list):
-            rotated_conn = (conn + self._rotation) % 4
+            # rotated_conn = (conn + self._rotation) % 4
+            rotated_conn = ((4 - self._rotation) + conn) % 4
             if self.needs_complementary():
                 is_connection[i] = self.connects_with(rotated_conn)
             else:
                 is_connection[i] = self._template.is_connection_at(rotated_conn)
         num_real_conn = sum(1 for x in is_connection if x is True)
 
-        return desired_conn >= num_real_conn
+        return desired_conn <= num_real_conn
 
     def connects_with(self, conn):
         if self._template.is_connection_at(conn):

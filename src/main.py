@@ -17,7 +17,7 @@ prototemplates = IOUtils.read_templates()
 # Generation
 generator = Generator(
     prototemplates=prototemplates,
-    # seed=128,
+    # seed=1103366188522417049,
     doRotation=rotation,
     doFlipping=flipping,
 )
