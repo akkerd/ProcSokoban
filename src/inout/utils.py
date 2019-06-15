@@ -1,14 +1,17 @@
 import glob
-import os
+import os, os.path
 import errno
 import sys
 import math
+import copy
 
 class IOUtils:
+    @staticmethod
     def print_grid(grid):
         for row in grid.values():
             print("Row by row: ", "".join(row))
 
+    @staticmethod
     def print_and_write_grid(grid, file_name):
         path_to_script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         # Print AI-MAS formatted level
@@ -22,7 +25,6 @@ class IOUtils:
             WriteStream.write(line + "\n")
         WriteStream.close()
 
-        # Print in standard level
         for row in grid.values():
             for i, char in enumerate(row):
                 if char == "+":
@@ -35,55 +37,16 @@ class IOUtils:
                     row[i] = "."
                 elif char in "0123456789":
                     row[i] = "@"
+
+        # Print in standard format
         WriteStream = open(path_to_script_dir + "\levels\\" + file_name + ".txt", "w+")
         for row in grid.values():
             line = "".join(row)
             WriteStream.write(line + "\n")
-        WriteStream.close()
+        WriteStream.close()        
 
-    def read_templates(extension: str):
-        path = os.path.dirname(os.path.abspath(__file__))
-        path = path[:-5] + "templates\*"
-        print(path)
-        template_list = []
-        files = glob.glob(path)
-        longest_line = 0
-        for name in files:
-            if name[-3:] == ".".join(extension):
-                try:
-                    lines = open(name, "r").read().splitlines()
-                    
-                    # Find longest line in template
-                    longest_line = len(max(lines, key=lambda coll: len(coll.rstrip())))
-                    
-                    # Adapt templates to have fixed 5x5 size, or multiples of that (5x10, 15x10...)
-                    width = math.ceil(longest_line / 5) * 5
-                    height = math.ceil(len(lines) / 5) * 5
-                    
-                    # Adapt width
-                    for i, line in enumerate(tuple(lines)):
-                        # Add spaces if neccesary to mainatin rectangular modules 
-                        if width - len(line) != 0:
-                            for j in range(0, width - len(line)):
-                                line += " "
-                        lines[i] = list(line)
-
-                    # Adapt height
-                    for k in range(0, height - len(lines)):
-                        new_line = [' '] * width
-                        lines.append(new_line)
-
-                    temp = {
-                        'name': name.split("\\")[-1],
-                        'lines': lines
-                    }
-                    template_list.append(temp)       
-                except IOError as exc:
-                    print(exc)
-                    if exc.errno != errno.EISDIR:
-                        raise
-        return template_list
-
+    
+    @staticmethod
     def read_templates():
         path = os.path.dirname(os.path.abspath(__file__))
         path = path[:-5] + "templates\*"
@@ -91,7 +54,10 @@ class IOUtils:
         prototemplates = {'kt': [], 'wc': [], 'gt': []}
         files = glob.glob(path)
         longest_line = 0
+        # Clean validity check folder
+        IOUtils.clean_validity_check()
         for name in files:
+            # print("File name to open: ", name)
             extension = name[-2:]
             if extension in prototemplates.keys():
                 try:
@@ -137,8 +103,12 @@ class IOUtils:
                     new_line = [' '] * width
                     lines.append(new_line)
 
-                # Create prototemplate structure
+                # Save templates for validity check
                 t_name = name.split("\\")[-1]
+                if extension != "kt":
+                    IOUtils.save_validity_check(lines, t_name)
+
+                # Create prototemplate structure
                 if height > 5 or width > 5:
                     prototemplates_to_keep = []
                     # Split templates if size is bigger than 5x5
@@ -162,3 +132,68 @@ class IOUtils:
                     prototemplates[extension].append(temp)
 
         return prototemplates
+
+    @staticmethod
+    def clean_validity_check():
+        path = os.path.dirname(os.path.abspath(__file__))
+        path = path[:-5] + "templates\\validity_check\*"
+        files = glob.glob(path)
+        # Delete previous
+        for previous_file in files:
+            os.unlink(previous_file)
+    
+    @staticmethod
+    def save_validity_check(grid, name):
+        exits = []
+        print(grid)
+        for i, row in enumerate(grid):
+            for j, cell in enumerate(row):
+                if cell == "/":
+                    exits.append((i, j))
+        c = 0
+        for ex in exits:
+            temp_grid = copy.deepcopy(grid)
+            temp_grid[ex[0]][ex[1]] = "0"
+            for ex2 in exits:
+                if ex2 != ex:
+                    temp_grid[ex2[0]][ex2[1]] = "+"
+            c += 1
+            IOUtils.write_validitycheck_standard(temp_grid, name.replace(".", "") + "_" + str(c) + ".txt")
+
+    @staticmethod
+    def parse_to_standard(grid):
+        temp_grid = copy.deepcopy(grid)
+        for row in temp_grid:
+            for i, char in enumerate(row):
+                if char == "+":
+                    row[i] = "#"
+                elif char == "X":
+                    row[i] = " "
+                elif char in "ABCDEFGHIJKLMNOPQRSTUVWYZ":
+                    row[i] = "$"
+                elif char in "abcdefghijklmnopqrstuvwyz":
+                    row[i] = "."
+                elif char in "0123456789":
+                    row[i] = "@"
+        return temp_grid
+
+    @staticmethod
+    def write_validitycheck_standard(level, file_name):
+        path = os.path.dirname(os.path.abspath(__file__))
+        path = path[:-5] + "templates\\validity_check\\"
+        if not os.path.exists(path):
+            os.mkdir(path)
+        # Print in standard format
+        grid = IOUtils.parse_to_standard(level)
+        # print(path + file_name)
+        # print(grid)
+        heigth = len(grid)
+        width = len(grid[0])
+        wall_row = ("#"*(width+2))
+        WriteStream = open(path + file_name, "w+")
+        WriteStream.write(wall_row + "\n")
+        for row in grid:
+            line = "".join(row)
+            WriteStream.write("#" + line + "#" + "\n")
+        WriteStream.write(wall_row + "\n")
+        WriteStream.close()

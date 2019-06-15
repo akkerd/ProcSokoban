@@ -148,11 +148,6 @@ class Generator:
                     grid.print()
 
         #############################################################################
-        ######################### Run AI to shuffle elements ########################
-        #############################################################################
-        # TODO:
-
-        #############################################################################
         ############################ Final level creation ###########################
         #############################################################################
         # Create final level
@@ -226,6 +221,7 @@ class Generator:
             goal = random.choice(temp_goals)
             while not grid.can_set_templatec(goal, mod_pos) or not goal.has_connections_at(connections, 1):
                 # Timeout if all goals checked
+                temp_goals.remove(goal)
                 if len(temp_goals) == 0:
                     if module_prioque.empty():
                         # Can't place the goal anywhere
@@ -234,7 +230,6 @@ class Generator:
                     mod_pos = module_prioque.get()[1]
                     connections = self.get_possible_connections(mod_pos, grid)
                     temp_goals = copy.copy(self.goals)
-                temp_goals.remove(goal)
                 goal = random.choice(temp_goals)
             # Goal found
             break
