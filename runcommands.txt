@@ -1,1 +1,6 @@
 java -jar server.jar -l src/levels/test.lvl  -c "python src/ai -s astar" -g 50 -t 180
+
+cd src
+python
+from inout.parse_to_standard import *
+parse_to_standard("original1.kt")

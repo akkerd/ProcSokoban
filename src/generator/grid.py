@@ -167,7 +167,8 @@ class Grid:
         return module_list[chosen_index]
  
     def collapse_next(self):
-        use_distance_heuristic = not self.Reseted
+        # use_distance_heuristic = not self.Reseted
+        use_distance_heuristic = True
         open_list = self.get_open_list()
 
         if self.Reseted:
